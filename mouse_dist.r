@@ -34,7 +34,7 @@ rings <- c(4,4,4,4,4,4,4,4,
 #Simulate by parallel computing
 #iter = 10000 -> 6.55 minutes (on 3 cores of Alton's mac)
 #iter = 100000 -> 1.160445 hours (on 3 cores of Alton's mac)
-iter = 100
+iter = 1000000
 cores=detectCores()
 start_time <- Sys.time()
 cl <- makeCluster(cores-1)
@@ -42,12 +42,17 @@ registerDoParallel(cl)
 Catches <- rep(0, times = 64)
 Catches <- matrix(Catches, nrow = 8, ncol = 8)
 Catches <- foreach(i=1:iter, .combine = '+') %dopar% {
-  tmp <- oneRun(print = TRUE)
+  tmp <- matrixSim()
   tmp
 }
 stopCluster(cl)
 Sys.time() - start_time
 
+
+#Save the data (1000000 runs took 4.664996 hours on 7 Alton work laptop cores)
+# write.matrix(Catches, file = "", sep = ",")
+# test = read.csv(file = "/Users/abarbehenn/Documents/MousePaper/CatchesMatrix_1000000.csv", header = FALSE)
+# test = as.matrix(test)
 
 r <- raster(xmn = 0, xmx = 8, ymn = 0, ymx = 8, nrows = 8, ncols = 8)
 r[] <- Catches
@@ -96,8 +101,13 @@ if (pval) {
 
 
 
-
-
+for (i in as.numeric(levels(mice$ring))) {
+  print(i)
+  print(shapiro.test(mice$count[mice$ring==i])$p.value)
+  if (length(mice$count[mice$ring==i])>4) {
+    print(lillie.test(mice$count[mice$ring==i])$p.value)
+  }
+}
 
 
 

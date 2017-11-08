@@ -153,6 +153,46 @@ oneRun <- function(print=FALSE)
 }
 
 
+#This function is exactly the same as oneRun (above), but it does not attempt to print anything
+#or even generate the data to print. This is to speed it up.
+matrixSim <- function() {
+  ## ------ Fixed Stuff ------
+  gx <- NULL
+  gy <- NULL
+  b <- (ts/2)*(2*c(0:7)-7)
+  gx <- rep(b, times=length(b))
+  gy <- rep(-b, each=length(b))
+  
+  ## ------ Variable Stuff ------
+  vx <- NULL
+  vy <- NULL
+  for (ii in c(1:np)) { #we can do this without the for-loop by generating batches of rv's (np, nv, and/or np*nv)
+    x <- fs*(0.5-runif(1))
+    y <- fs*(0.5-runif(1))
+    fx <- x+rnorm(nv) #forage coordinates
+    fy <- y+rnorm(nv)
+    vx <- append(vx, fx) #all forage locations
+    vy <- append(vy, fy)
+  }
+
+  ## ------ Determine Capture ---
+  ## This approach is statistically the same as checking whether each forage is caught at the time of the forage
+  catch_count <- rep(0, times = length(gx))
+  for (mouse in 1:np) {
+    v_range <- ((mouse-1)*nv + 1):(mouse*nv)
+    possible_traps <- traps(trap_x = gx, trap_y = gy, forage_x = vx[v_range], forage_y = vy[v_range], delta = delta)
+    trap <- possible_traps$trap[!is.na(possible_traps$trap)][1] #first trap the mouse gets caught in (trap = NA indicates that the mouse didn't get caught)
+    
+    if (!is.na(trap)) {
+      catch_count[trap] = catch_count[trap] + 1
+    }
+  }
+  catch_count <- matrix(catch_count, nrow = 8, ncol = 8, byrow = TRUE)
+  
+  return(catch_count)
+}
+
+
 #Returns the traps, if any, that the mouse gets caught in for forage
 #Pretty sure this approach maintains the foraging order
 traps <- function(trap_x, trap_y, forage_x, forage_y, delta){
