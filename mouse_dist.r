@@ -1,8 +1,9 @@
-#Distribution of counts within each ring
+#This script is designed to understand the distribution of counts 
+#within each ring of the traps (and if that's the best way at all)
 
 ## ---- Extra Libraries ---------
-library(doParallel)
 library(foreach)
+library(doParallel)
 library(raster)
 library(reshape2)
 library(ggplot2)
@@ -30,11 +31,20 @@ rings <- c(4,4,4,4,4,4,4,4,
            4,3,3,3,3,3,3,4, 
            4,4,4,4,4,4,4,4)
 
+groups <- c(7,6,5,5,5,5,6,7, 
+            6,4,3,3,3,3,4,6, 
+            5,3,2,2,2,2,3,5, 
+            5,3,2,1,1,2,3,5, 
+            5,3,2,1,1,2,3,5, 
+            5,3,2,2,2,2,3,5, 
+            6,4,3,3,3,3,4,6, 
+            7,6,5,5,5,5,6,7)
+
 
 #Simulate by parallel computing
 #iter = 10000 -> 6.55 minutes (on 3 cores of Alton's mac)
 #iter = 100000 -> 1.160445 hours (on 3 cores of Alton's mac)
-iter = 1000000
+iter = 100
 cores=detectCores()
 start_time <- Sys.time()
 cl <- makeCluster(cores-1)
@@ -53,6 +63,7 @@ Sys.time() - start_time
 # write.matrix(Catches, file = "", sep = ",")
 # test = read.csv(file = "/Users/abarbehenn/Documents/MousePaper/CatchesMatrix_1000000.csv", header = FALSE)
 # test = as.matrix(test)
+# Catches <- test
 
 r <- raster(xmn = 0, xmx = 8, ymn = 0, ymx = 8, nrows = 8, ncols = 8)
 r[] <- Catches
@@ -63,9 +74,10 @@ Catches
 mice <- melt(Catches)
 names(mice) <- c("row", "col", "count")
 mice$ring <- factor(rings)
+mice$group <- factor(groups)
 
 
-plt <- ggplot(data = mice) + geom_density(mapping = aes(x=count, colour=ring))
+plt <- ggplot(data = mice[mice$ring==1]) + geom_density(mapping = aes(x=count, colour=ring))
 plt
 
 
@@ -100,12 +112,22 @@ if (pval) {
 
 
 
-
+# Some of the rings seem normal, others are definately multi-modal
 for (i in as.numeric(levels(mice$ring))) {
   print(i)
   print(shapiro.test(mice$count[mice$ring==i])$p.value)
   if (length(mice$count[mice$ring==i])>4) {
     print(lillie.test(mice$count[mice$ring==i])$p.value)
+  }
+}
+
+
+# The groups all seem normally distributed
+for (i in as.numeric(levels(mice$group))) {
+  print(i)
+  print(shapiro.test(mice$count[mice$group==i])$p.value)
+  if (length(mice$count[mice$group==i])>4) {
+    print(lillie.test(mice$count[mice$group==i])$p.value)
   }
 }
 
