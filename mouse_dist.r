@@ -74,10 +74,9 @@ Catches
 mice <- melt(Catches)
 names(mice) <- c("row", "col", "count")
 mice$ring <- factor(rings)
-mice$group <- factor(groups)
 
 
-plt <- ggplot(data = mice[mice$ring==1]) + geom_density(mapping = aes(x=count, colour=ring))
+plt <- ggplot(data = mice) + geom_density(mapping = aes(x=count, colour=ring))
 plt
 
 
@@ -99,6 +98,48 @@ qqnorm(mice$count[mice$ring==4])
 qqline(mice$count[mice$ring==4], col=2)
 shapiro.test(mice$count[mice$ring==4]) #Null: dist is normal
 lillie.test(mice$count[mice$ring==4]) #Null: dist is normal
+
+
+#From the qqplots we can pretty clearly see that that rings 3 and 4 are definately multinodal.
+#Here are their plots by group
+mice$group <- factor(groups)
+
+#ring 3 is groups 3 and 4
+qqnorm(mice$count[mice$group==3])
+qqline(mice$count[mice$group==3], col=2)
+shapiro.test(mice$count[mice$group==3]) #Null: dist is normal
+lillie.test(mice$count[mice$group==3]) #Null: dist is normal
+
+qqnorm(mice$count[mice$group==4])
+qqline(mice$count[mice$group==4], col=2)
+shapiro.test(mice$count[mice$group==4]) #Null: dist is normal
+
+#ring 4 is groups 5, 6, and 7
+qqnorm(mice$count[mice$group==5])
+qqline(mice$count[mice$group==5], col=2)
+shapiro.test(mice$count[mice$group==5]) #Null: dist is normal
+lillie.test(mice$count[mice$group==5]) #Null: dist is normal
+
+qqnorm(mice$count[mice$group==6])
+qqline(mice$count[mice$group==6], col=2)
+shapiro.test(mice$count[mice$group==6]) #Null: dist is normal
+lillie.test(mice$count[mice$group==6]) #Null: dist is normal
+
+qqnorm(mice$count[mice$group==7])
+qqline(mice$count[mice$group==7], col=2)
+shapiro.test(mice$count[mice$group==7]) #Null: dist is normal
+
+
+#So it seems that the only group that isn't normal is group 3.
+#This is really interesting because it isn't super appearent from 
+#the raster plot which ones are the diffent ones or if this is a
+#statistical annomoly.
+
+plot(density(mice$count[mice$group==3]))
+#if it were the ones just in from the corners, it would be exactly half the group
+#it could be that one group has a tighter cluster or that the groups are shifted.
+
+
 
 
 ## Seems close to normal
