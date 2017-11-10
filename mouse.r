@@ -6,17 +6,11 @@
 ## TODO: plot of how well the denisty estimation scales with the number of traps
 
 
-oneExperiment <- function() {
+studySim <- function() {
   ## ------ Fixed Stuff ------
   gx <- NULL
   gy <- NULL
   b <- (ts/2)*(2*c(0:7)-7)
-  # for (ii in b) {
-  #   for (jj in b) {
-  #     gx <- append(gx,ii)
-  #     gy <- append(gy,jj)
-  #   } 
-  # }
   gx <- rep(b, times=length(b))
   gy <- rep(-b, each=length(b))
   
@@ -30,14 +24,10 @@ oneExperiment <- function() {
   for (ii in c(1:np)) { #we can do this without the for-loop by generating batches of rv's (np, nv, and/or np*nv)
     x <- fs*(0.5-runif(1))
     y <- fs*(0.5-runif(1))
-    mx <- append(mx, x) #mouse location
-    my <- append(my, y)
     fx <- x+rnorm(nv) #forage coordinates
     fy <- y+rnorm(nv)
     vx <- append(vx, fx) #all forage locations
     vy <- append(vy, fy)
-    sx[,ii] <- c(x,fx) #all forage locations for each mouse
-    sy[,ii] <- c(y,fy) #first value is the mouse's location, the rest are it's forage location
   }
   
   mice <- data.frame(trap=NULL, forage=NULL)
@@ -45,7 +35,7 @@ oneExperiment <- function() {
     v_range <- ((mouse-1)*nv + 1):(mouse*nv)
     possible_traps <- traps(trap_x = gx, trap_y = gy, forage_x = vx[v_range], forage_y = vy[v_range], delta = delta)
     trap <- possible_traps$trap[!is.na(possible_traps$trap)][1] #first trap the mouse gets caught in (trap = NA indicates that the mouse didn't get caught)
-    day <- which(possible_traps$trap==trap)[1]
+    day <- which(possible_traps$trap==trap)[1] #caught on first day mouse got to that trap
     mice <- rbind.data.frame(mice, c(trap, day))
   }
   names(mice) <- c("trap", "day")
