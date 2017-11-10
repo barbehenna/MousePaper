@@ -44,7 +44,7 @@ groups <- c(7,6,5,5,5,5,6,7,
 #Simulate by parallel computing
 #iter = 10000 -> 6.55 minutes (on 3 cores of Alton's mac)
 #iter = 100000 -> 1.160445 hours (on 3 cores of Alton's mac)
-iter = 100
+iter = 10000000
 cores=detectCores()
 start_time <- Sys.time()
 cl <- makeCluster(cores-1)
