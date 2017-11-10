@@ -24,7 +24,6 @@ iter = 100
 ncores=detectCores()
 
 
-
 #parLapply
 parLapply_time <- Sys.time()
 Catches <- NULL
@@ -33,7 +32,6 @@ Catches <- parLapply(cl, 1:iter, function(x) matrixSim())
 stopCluster(cl)
 Catches <- Reduce('+', Catches)
 parLapply_time <- Sys.time() - parLapply_time
-
 
 
 #Foreach
@@ -62,6 +60,8 @@ times <- data.frame(iteration = c(100, 1000, 10000),
 
 # So it seems reasonable to use either method, but it may be worth using 
 # foreach() for the really computations with a high number of iterations
+
+# Let's be a little more rigorous and detailed.
 
 ncores=detectCores()
 
@@ -112,6 +112,17 @@ Sys.time() - st
 # b <- g(ncores) 23.39965 24.12750 25.54315 24.55611 27.63518 29.41864    10   a
 
 
+# About ____~78____ minutes on Alton's work laptop 7 cores used
+iter = 10000
+st <- Sys.time()
+microbenchmark(times = 10,
+               a <- f(ncores),
+               b <- g(ncores))
+Sys.time() - st
 
+
+
+# So we see that there isn't a noticable difference between the two methods 
+# when we're doing low numbers of iterations
 
 
