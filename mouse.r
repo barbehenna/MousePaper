@@ -30,7 +30,7 @@ studySim <- function() {
     vy <- append(vy, fy)
   }
   
-  mice <- data.frame(trap=NULL, forage=NULL)
+  mice <- data.frame(trap=NULL, day=NULL)
   for (mouse in 1:np) {
     v_range <- ((mouse-1)*nv + 1):(mouse*nv)
     possible_traps <- traps(trap_x = gx, trap_y = gy, forage_x = vx[v_range], forage_y = vy[v_range], delta = delta)

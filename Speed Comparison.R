@@ -112,14 +112,22 @@ Sys.time() - st
 # b <- g(ncores) 23.39965 24.12750 25.54315 24.55611 27.63518 29.41864    10   a
 
 
-# About ____~78____ minutes on Alton's work laptop 7 cores used
+# About 85.67/181.97 minutes on Alton's work laptop 7 cores used
 iter = 10000
+Sys.time()
 st <- Sys.time()
-microbenchmark(times = 10,
+microbenchmark(times = 20,
                a <- f(ncores),
                b <- g(ncores))
 Sys.time() - st
-
+# Unit: seconds
+# expr      min       lq     mean   median       uq      max neval cld
+# a <- f(ncores) 228.1478 231.3866 256.2331 255.0844 270.0095 298.1593    10   a
+# b <- g(ncores) 233.2353 249.1102 257.4680 255.5962 266.3098 285.6387    10   a
+# Unit: seconds
+# expr      min       lq     mean   median       uq      max neval cld
+# a <- f(ncores) 246.3816 251.4022 271.2623 275.5464 284.8791 300.3063    20   a
+# b <- g(ncores) 252.4787 264.6500 274.6058 276.7140 284.3706 299.2397    20   a
 
 
 # So we see that there isn't a noticable difference between the two methods 

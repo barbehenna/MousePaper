@@ -40,13 +40,26 @@ genTime <- Sys.time() - genTime
 genTime
 
 
+Studies <- lapply(1:4, function(x) studySim())
+
+
+
 # Use list of studies
 # We're going to build a dataframe containing:
 #     the study number,
 #     p-value of anova test comparing the rings across the whole study, and
 #     the statistics for each period (as per lisp file).
 
+nperiods <- 2
+periods <- list(c(1,2), c(3,4)) #the first two days are one period and the second two are the other
 
-
+#Generate data frame with values: iteration, trap number, catches in period one, and catches in period two
+#In post processing we can add ring labels and the total catches
+Traps <- lapply(Studies, function(x) {
+  
+})
+#Traps <- do.call("rbind", traps)
+library(data.table)
+Traps <- as.data.frame(rbindlist(Traps))
 
 
