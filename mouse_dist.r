@@ -61,7 +61,7 @@ Sys.time() - start_time
 
 #Save the data (1000000 runs took 4.664996 hours on 7 Alton work laptop cores)
 # write.matrix(Catches, file = "", sep = ",")
-# test = read.csv(file = "/Users/abarbehenn/Documents/MousePaper/CatchesMatrix_1000000.csv", header = FALSE)
+# test = read.csv(file = "/Users/abarbehenn/Documents/MousePaper/data/CatchesMatrix_1000000.csv", header = FALSE)
 # test = as.matrix(test)
 # Catches <- test
 
