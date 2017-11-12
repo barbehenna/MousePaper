@@ -9,11 +9,11 @@ library(data.table)
 ## ----- Simulation Constants----
 d <- 1 #mice/m^2
 # ts <- 1.5 #m
-fs <- 7*ts+7 #m
-np <- as.integer(d*fs*fs) #mice
+#fs <- 7*ts+7 #m
+#np <- as.integer(d*fs*fs) #mice
 nv <- 4
 delta <- 0.5
-iter <- 100
+iter <- 1000
 
 if (delta > ts/2) {
   stop("Something weird may happen with this run becuase a mouse can be caught by two traps in the same forage")
@@ -28,12 +28,14 @@ rings <- c(4,4,4,4,4,4,4,4,
            4,3,3,3,3,3,3,4, 
            4,4,4,4,4,4,4,4)
 
-TrapSpacing <- seq(from = -2, to = 5, by = 1)
-TrapSpacing <- 2^TrapSpacing
+TrapSpacing <- seq(from = 1, to = 10, by = 0.5)
+#TrapSpacing <- 2^TrapSpacing
 
 print(Sys.time())
 VariableSpacingSimulation <- lapply(TrapSpacing, function(ts) {
   print(ts)
+  fs <- 7*ts+7
+  np <- as.integer(d*fs*fs)
   
   # Simulate the studies
   ncores <- detectCores()
@@ -91,6 +93,7 @@ VariableSpacingSimulation <- lapply(TrapSpacing, function(ts) {
   
   # Save the data
   StatsDF <- as.data.frame(rbindlist(Stats))
+  StatsDF$square <- factor(rep(1:5, times = iter))
   write.csv(StatsDF, paste0("/Users/Alton/Documents/Projects/MousePaper/Data/","delta_", delta, "ts_", ts, ".csv"))
   return(StatsDF)
 })
@@ -100,7 +103,10 @@ VariableSpacingSimulation <- lapply(TrapSpacing, function(ts) {
 # AND ADD A SQUARE NUMBER TO STATSDF BEFORE IT'S RETURNED.
 
 
-
+lapply(VariableSpacingSimulation, function(x) {
+  dHat_plt <- ggplot(x, aes(x = dHat, color = square)) + geom_density(na.rm = TRUE) + xlim(0, 5)
+  return(dHat_plt)
+})
 
 
 
