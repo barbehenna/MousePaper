@@ -13,11 +13,11 @@ d <- 1 #mice/m^2
 #np <- as.integer(d*fs*fs) #mice
 nv <- 4
 delta <- 0.5
-iter <- 1000
+iter <- 100
 
-if (delta > ts/2) {
-  stop("Something weird may happen with this run becuase a mouse can be caught by two traps in the same forage")
-}
+# if (delta > ts/2) {
+#   stop("Something weird may happen with this run becuase a mouse can be caught by two traps in the same forage")
+# }
 
 rings <- c(4,4,4,4,4,4,4,4, 
            4,3,3,3,3,3,3,4, 
@@ -37,10 +37,14 @@ VariableSpacingSimulation <- lapply(TrapSpacing, function(ts) {
   fs <- 7*ts+7
   np <- as.integer(d*fs*fs)
   
+  if (delta > ts/2) {
+    print("Something weird may happen with this run becuase a mouse can be caught by two traps in the same forage")
+  }
+  
   # Simulate the studies
   ncores <- detectCores()
   cl <- makeCluster(ncores-1, type = "FORK")
-  Studies <- parLapply(cl, 1:iter, function(x) studySim())
+  Studies <- parLapply(cl, 1:iter, function(x) studySim(ts, fs, np, delta, nv, d))
   stopCluster(cl)
   print(Sys.time())
   
@@ -94,7 +98,7 @@ VariableSpacingSimulation <- lapply(TrapSpacing, function(ts) {
   # Save the data
   StatsDF <- as.data.frame(rbindlist(Stats))
   StatsDF$square <- factor(rep(1:5, times = iter))
-  write.csv(StatsDF, paste0("/Users/Alton/Documents/Projects/MousePaper/Data/","delta_", delta, "ts_", ts, ".csv"))
+  write.csv(StatsDF, paste0("~/Documents/MousePaper/Data/","delta_", delta, "ts_", ts, ".csv"))
   return(StatsDF)
 })
 
@@ -104,7 +108,7 @@ VariableSpacingSimulation <- lapply(TrapSpacing, function(ts) {
 
 
 lapply(VariableSpacingSimulation, function(x) {
-  dHat_plt <- ggplot(x, aes(x = dHat, color = square)) + geom_density(na.rm = TRUE) + xlim(0, 5)
+  dHat_plt <- ggplot(x, aes(x = dHat, color = square)) + geom_density(na.rm = TRUE) + xlim(quantile(na.omit(x$dHat), 0.005)[[1]], quantile(na.omit(x$dHat), 0.995)[[1]])
   return(dHat_plt)
 })
 

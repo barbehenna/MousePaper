@@ -6,7 +6,7 @@
 ## TODO: plot of how well the denisty estimation scales with the number of traps
 
 
-studySim <- function() {
+studySim <- function(ts, fs, np, delta, nv, d) {
   ## ------ Fixed Stuff ------
   gx <- NULL
   gy <- NULL
