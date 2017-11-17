@@ -7,13 +7,13 @@ library(ggplot2)
 library(data.table)
 
 ## ----- Simulation Constants----
-d <- 1 #mice/m^2
+# d <- 1 #mice/m^2
 # ts <- 1.5 #m
-#fs <- 7*ts+7 #m
-#np <- as.integer(d*fs*fs) #mice
-nv <- 4
-delta <- 0.5
-iter <- 100
+# fs <- 7*ts+7 #m
+# np <- as.integer(d*fs*fs) #mice
+# nv <- 4
+# delta <- 0.5
+# iter <- 100
 
 # if (delta > ts/2) {
 #   stop("Something weird may happen with this run becuase a mouse can be caught by two traps in the same forage")
@@ -28,23 +28,44 @@ rings <- c(4,4,4,4,4,4,4,4,
            4,3,3,3,3,3,3,4, 
            4,4,4,4,4,4,4,4)
 
-TrapSpacing <- seq(from = 1, to = 10, by = 0.5)
-#TrapSpacing <- 2^TrapSpacing
 
+# Generate a dataframe containing every parameter combination of interest
+TrapSpacing <- seq(from = 1, to = 10, by = 0.25)
+CatchRadius <- seq(from = 0.1, to = 4, by = 0.1)
+Boarder <- seq(from = 3, to = 10, by = 1)
+Density <- seq(from = 0.25, to = 2, by = 0.25)
+Parameters <- expand.grid(Density, Boarder, CatchRadius, TrapSpacing)
+names(Parameters) <- c("Density", "Boarder", "CatchRadius", "TrapSpacing")
+Parameters$FieldSize <- 7*Parameters$TrapSpacing + Parameters$Boarder
+Parameters$NumMice <- as.integer(Parameters$Density*Parameters$FieldSize*Parameters$FieldSize)
+
+remove_rows <- which(Parameters$CatchRadius > Parameters$TrapSpacing/2)
+Parameters <- Parameters[-remove_rows,]
+
+Parameters_list <- split(Parameters, seq(nrow(Parameters)))
+
+#For testing
+Parameters <- Parameters[1:100,]
+Parameters_list <- Parameters_list[1:100]
+
+
+iter <- 10
 print(Sys.time())
-VariableSpacingSimulation <- lapply(TrapSpacing, function(ts) {
-  print(ts)
-  fs <- 7*ts+7
-  np <- as.integer(d*fs*fs)
-  
-  if (delta > ts/2) {
-    print("Something weird may happen with this run becuase a mouse can be caught by two traps in the same forage")
-  }
+VariableSpacingSimulation <- lapply(Parameters_list, function(param) {
+  print(param)
+  print(paste("class:",class(param)))
+  print(paste("str:", str(param)))
+  ts <- param$TrapSpacing
+  fs <- param$FieldSize
+  np <- param$NumMice
+  delta <- param$CatchRadius
+  nv = 4
+  d <- param$Density
   
   # Simulate the studies
   ncores <- detectCores()
   cl <- makeCluster(ncores-1, type = "FORK")
-  Studies <- parLapply(cl, 1:iter, function(x) studySim(ts, fs, np, delta, nv, d))
+  Studies <- parLapply(cl, 1:iter, function(x) studySim(ts=ts, fs=fs, np=np, delta=delta, nv=nv, d=d))
   stopCluster(cl)
   print(Sys.time())
   
@@ -98,10 +119,17 @@ VariableSpacingSimulation <- lapply(TrapSpacing, function(ts) {
   # Save the data
   StatsDF <- as.data.frame(rbindlist(Stats))
   StatsDF$square <- factor(rep(1:5, times = iter))
-  write.csv(StatsDF, paste0("~/Documents/MousePaper/Data/","delta_", delta, "ts_", ts, ".csv"))
+  StatsDF$TrapSpacing <- ts
+  StatsDF$FielSize <- fs
+  StatsDF$CatchRadius <- delta
+  StatsDF$NumVentures <- nv
+  StatsDF$density <- d
+  #write.csv(StatsDF, paste0("~/Documents/MousePaper/data/","delta_", delta, "ts_", ts, ".csv"))
   return(StatsDF)
 })
 
+StudyAggregate <- as.data.frame(rbindlist(VariableSpacingSimulation))
+write.csv(StudyAggregate, paste0("~/Documents/MousePaper/data/StudyAggregate_", Sys.time(), ".csv"))
 
 # DOUBLE CHECK THAT AHAT IS BEING ASSIGNED CORRECTLY
 # AND ADD A SQUARE NUMBER TO STATSDF BEFORE IT'S RETURNED.
