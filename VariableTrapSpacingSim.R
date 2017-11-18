@@ -45,21 +45,18 @@ Parameters <- Parameters[-remove_rows,]
 Parameters_list <- split(Parameters, seq(nrow(Parameters)))
 
 #For testing
-Parameters <- Parameters[1:100,]
-Parameters_list <- Parameters_list[1:100]
+Parameters <- Parameters[1:5,]
+Parameters_list <- Parameters_list[1:5]
 
 
 iter <- 10
 print(Sys.time())
 VariableSpacingSimulation <- lapply(Parameters_list, function(param) {
-  print(param)
-  print(paste("class:",class(param)))
-  print(paste("str:", str(param)))
   ts <- param$TrapSpacing
   fs <- param$FieldSize
   np <- param$NumMice
   delta <- param$CatchRadius
-  nv = 4
+  nv <- 4
   d <- param$Density
   
   # Simulate the studies
@@ -67,8 +64,7 @@ VariableSpacingSimulation <- lapply(Parameters_list, function(param) {
   cl <- makeCluster(ncores-1, type = "FORK")
   Studies <- parLapply(cl, 1:iter, function(x) studySim(ts=ts, fs=fs, np=np, delta=delta, nv=nv, d=d))
   stopCluster(cl)
-  print(Sys.time())
-  
+
   # Parse the simulated studies
   Studies <- lapply(1:iter, function(x) {
     p1 <- lapply(1:64, function(y) sum(Studies[[x]]$trap[Studies[[x]]$day <= 2] == y))
@@ -77,8 +73,7 @@ VariableSpacingSimulation <- lapply(Parameters_list, function(param) {
     p2 <- unlist(p2)
     return(data.frame(simnum=rep(x,64), trap=1:64, period1=p1, period2=p2, total=p1+p2, ring=rings))
   })
-  print(Sys.time())
-  
+
   aHat <- 1:4 #ring numbers
   aHat <- (ts*2*aHat)^2 #concentric ring areas
   aHat <- c(aHat, aHat[4]-aHat[3]) #just ring 4
@@ -107,14 +102,31 @@ VariableSpacingSimulation <- lapply(Parameters_list, function(param) {
       }
       return(pHat)
     })
+    pHatDropNeg <- lapply(pHat, function(x) {
+      if (x < 0 && !is.na(x)) {
+        return(NA)
+      } else {
+        return(x)
+      }
+    })
+    pHatZeroNeg <- lapply(pHat, function(x) {
+      if (x < 0 && !is.na(x)) {
+        return(0)
+      } else {
+        return(x)
+      }
+    })
     pHat <- unlist(pHat)
+    pHatDropNeg <- unlist(pHatDropNeg)
+    pHatZeroNeg <- unlist(pHatZeroNeg)
     return(data.frame(simnum=rep(x,length(squares)),
                       dHat=nHat_dHat[,2],
                       nHat=nHat_dHat[,1],
                       pHat=pHat,
+                      pHatZeroNeg=pHatZeroNeg,
+                      pHatDropNeg=pHatDropNeg,
                       aHat=aHat))
   })
-  print(Sys.time())
   
   # Save the data
   StatsDF <- as.data.frame(rbindlist(Stats))
@@ -124,6 +136,8 @@ VariableSpacingSimulation <- lapply(Parameters_list, function(param) {
   StatsDF$CatchRadius <- delta
   StatsDF$NumVentures <- nv
   StatsDF$density <- d
+  
+  print(Sys.time())
   #write.csv(StatsDF, paste0("~/Documents/MousePaper/data/","delta_", delta, "ts_", ts, ".csv"))
   return(StatsDF)
 })

@@ -33,7 +33,7 @@ studySim <- function(ts, fs, np, delta, nv, d) {
   mice <- data.frame(trap=NULL, day=NULL)
   for (mouse in 1:np) {
     v_range <- ((mouse-1)*nv + 1):(mouse*nv)
-    possible_traps <- traps(trap_x = gx, trap_y = gy, forage_x = vx[v_range], forage_y = vy[v_range], delta = delta)
+    possible_traps <- traps(trap_x = gx, trap_y = gy, forage_x = vx[v_range], forage_y = vy[v_range], delta = delta, nv = nv)
     trap <- possible_traps$trap[!is.na(possible_traps$trap)][1] #first trap the mouse gets caught in (trap = NA indicates that the mouse didn't get caught)
     day <- which(possible_traps$trap==trap)[1] #caught on first day mouse got to that trap
     mice <- rbind.data.frame(mice, c(trap, day))
@@ -95,7 +95,7 @@ oneRun <- function(print=FALSE)
   catch_count <- rep(0, times = length(gx))
   for (mouse in 1:np) {
     v_range <- ((mouse-1)*nv + 1):(mouse*nv)
-    possible_traps <- traps(trap_x = gx, trap_y = gy, forage_x = vx[v_range], forage_y = vy[v_range], delta = delta)
+    possible_traps <- traps(trap_x = gx, trap_y = gy, forage_x = vx[v_range], forage_y = vy[v_range], delta = delta, nv = nv)
     #trap <- possible_traps[!is.na(possible_traps)][1] #first trap the mouse gets caught in (trap = NA indicates that the mouse didn't get caught)
     trap <- possible_traps$trap[!is.na(possible_traps$trap)][1]
     
@@ -170,7 +170,7 @@ matrixSim <- function() {
   catch_count <- rep(0, times = length(gx))
   for (mouse in 1:np) {
     v_range <- ((mouse-1)*nv + 1):(mouse*nv)
-    possible_traps <- traps(trap_x = gx, trap_y = gy, forage_x = vx[v_range], forage_y = vy[v_range], delta = delta)
+    possible_traps <- traps(trap_x = gx, trap_y = gy, forage_x = vx[v_range], forage_y = vy[v_range], delta = delta, nv = nv)
     trap <- possible_traps$trap[!is.na(possible_traps$trap)][1] #first trap the mouse gets caught in (trap = NA indicates that the mouse didn't get caught)
     
     if (!is.na(trap)) {
@@ -185,7 +185,7 @@ matrixSim <- function() {
 
 #Returns the traps, if any, that the mouse gets caught in for forage
 #Pretty sure this approach maintains the foraging order
-traps <- function(trap_x, trap_y, forage_x, forage_y, delta){
+traps <- function(trap_x, trap_y, forage_x, forage_y, delta, nv){
   dimension = length(trap_x)/length(trap_x[trap_x == trap_x[1]])
   
   dx <- lapply(forage_x, function(x) which(abs(x - trap_x) <= delta))
