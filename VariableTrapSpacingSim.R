@@ -8,18 +8,6 @@ library(parallel)
 library(ggplot2)
 library(data.table)
 
-## ----- Simulation Constants----
-# d <- 1 #mice/m^2
-# ts <- 1.5 #m
-# fs <- 7*ts+7 #m
-# np <- as.integer(d*fs*fs) #mice
-# nv <- 4
-# delta <- 0.5
-# iter <- 100
-
-# if (delta > ts/2) {
-#   stop("Something weird may happen with this run becuase a mouse can be caught by two traps in the same forage")
-# }
 
 rings <- c(4,4,4,4,4,4,4,4, 
            4,3,3,3,3,3,3,4, 
@@ -50,12 +38,12 @@ Parameters <- Parameters[-remove_rows,]
 
 Parameters_list <- split(Parameters, seq(nrow(Parameters)))
 
-#For testing
-Parameters <- Parameters[1:5,]
-Parameters_list <- Parameters_list[1:5]
+# For testing
+# Parameters <- Parameters[1:5,]
+# Parameters_list <- Parameters_list[1:5]
 
 
-iter <- 10
+iter <- 10 #number of simulations per study (set of parameters)
 print(Sys.time())
 VariableSpacingSimulation <- lapply(Parameters_list, function(param) {
   ts <- param$TrapSpacing
@@ -141,28 +129,21 @@ VariableSpacingSimulation <- lapply(Parameters_list, function(param) {
   StatsDF$TrapSpacing <- ts
   StatsDF$FielSize <- fs
   StatsDF$CatchRadius <- delta
-  StatsDF$NumVentures <- nv
+  StatsDF$NumVisits <- nv
   StatsDF$density <- d
   
   print(Sys.time())
-  #write.csv(StatsDF, paste0("~/Documents/MousePaper/data/","delta_", delta, "ts_", ts, ".csv"))
   return(StatsDF)
 })
 
 StudyAggregate <- as.data.frame(rbindlist(VariableSpacingSimulation))
-write.csv(StudyAggregate, paste0("~/Documents/MousePaper/data/StudyAggregate_", Sys.time(), ".csv"))
+write.csv(StudyAggregate, paste0("data/StudyAggregate_", format(Sys.time(), format = "%Y-%m-%d_%H-%M-%S"), ".csv")) # the working directory should be the mousepaper project directory
 
-# DOUBLE CHECK THAT AHAT IS BEING ASSIGNED CORRECTLY
-# AND ADD A SQUARE NUMBER TO STATSDF BEFORE IT'S RETURNED.
 
-# 
 # lapply(VariableSpacingSimulation, function(x) {
 #   dHat_plt <- ggplot(x, aes(x = dHat, color = square)) + geom_density(na.rm = TRUE) + xlim(quantile(na.omit(x$dHat), 0.005)[[1]], quantile(na.omit(x$dHat), 0.995)[[1]])
 #   return(dHat_plt)
 # })
-
-
-
 
 
 
