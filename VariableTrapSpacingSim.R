@@ -1,8 +1,11 @@
 # Copyright (c) 2017 Alton Barbehenn
 
-# This script is an extension of Study Simulation.R. It is basically
-# the same code but I'm looping through a few different trap spacings.
-# I'm both storing the output in a list and saving the raw simulated statistics.
+# This script has many of the same comonents as StudySimulation.R. Whereas in StudySimulation.R
+# I am playing around with visualization and if and where we can detect the edge effect, in this
+# script I'm simulating studies across a large parameter space. With each simulated study I'm
+# I'm calculating the statistics used in a paper by Calhoun-Zippen in Barbehenn 1974. I'm then
+# saving the data for later analyses. This way I can save CPU and understand the parameter space 
+# better before making it finer.
 
 library(parallel)
 library(ggplot2)
@@ -60,7 +63,7 @@ VariableSpacingSimulation <- lapply(Parameters_list, function(param) {
   Studies <- lapply(1:iter, function(x) studySim(ts=ts, fs=fs, np=np, delta=delta, nv=nv, d=d))
   # stopCluster(cl)
 
-  # Parse the simulated studies
+  # Parse the simulated studies for the number of mice caught in each of the two periods, per trap
   Studies <- lapply(1:iter, function(x) {
     p1 <- lapply(1:64, function(y) sum(Studies[[x]]$trap[Studies[[x]]$day <= 2] == y))
     p1 <- unlist(p1)
@@ -69,12 +72,15 @@ VariableSpacingSimulation <- lapply(Parameters_list, function(param) {
     return(data.frame(simnum=rep(x,64), trap=1:64, period1=p1, period2=p2, total=p1+p2, ring=rings))
   })
 
+  # Build a list of the rings in each square
+  squares <- list(1, 1:2, 1:3, 1:4, 4)
+  
+  # Estimate the area in each of the squares
   aHat <- 1:4 #ring numbers
   aHat <- (ts*2*aHat)^2 #concentric ring areas
   aHat <- c(aHat, aHat[4]-aHat[3]) #just ring 4
-  squares <- list(1, 1:2, 1:3, 1:4, 4)
   
-  # Calculate statistics
+  # Calculate Calhoun-Zippen and Barbehenn statistics
   Stats <- lapply(1:iter, function(x) {
     p1 <- lapply(squares, function(y) sum(Studies[[x]]$period1[Studies[[x]]$ring %in% y]))
     p2 <- lapply(squares, function(y) sum(Studies[[x]]$period2[Studies[[x]]$ring %in% y]))
@@ -136,21 +142,11 @@ VariableSpacingSimulation <- lapply(Parameters_list, function(param) {
   return(StatsDF)
 })
 
+
+# Save to the data directory for later use
+# The working directory should be the mousepaper project directory
 StudyAggregate <- as.data.frame(rbindlist(VariableSpacingSimulation))
-write.csv(StudyAggregate, paste0("data/StudyAggregate_", format(Sys.time(), format = "%Y-%m-%d_%H-%M-%S"), ".csv")) # the working directory should be the mousepaper project directory
-
-
-# lapply(VariableSpacingSimulation, function(x) {
-#   dHat_plt <- ggplot(x, aes(x = dHat, color = square)) + geom_density(na.rm = TRUE) + xlim(quantile(na.omit(x$dHat), 0.005)[[1]], quantile(na.omit(x$dHat), 0.995)[[1]])
-#   return(dHat_plt)
-# })
-
-
-
-
-
-
-
+write.csv(StudyAggregate, paste0("data/StudyAggregate_", format(Sys.time(), format = "%Y-%m-%d_%H-%M-%S"), ".csv")) 
 
 
 
