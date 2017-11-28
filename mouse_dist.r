@@ -1,3 +1,5 @@
+# Copyright (c) 2017 Alton Barbehenn
+
 #This script is designed to understand the distribution of counts 
 #within each ring of the traps (and if that's the best way at all)
 

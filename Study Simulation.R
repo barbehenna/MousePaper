@@ -1,3 +1,5 @@
+# Copyright (c) 2017 Alton Barbehenn
+
 # This script simulates a study (currently 2 periods made of two checks on each of two days is hard-coded)
 # I first simualte a study, then calculate the important statistics. I store both the data and the statistics
 # for later analyses. 

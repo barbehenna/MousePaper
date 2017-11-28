@@ -1,3 +1,5 @@
+# Copyright (c) 2017 Alton Barbehenn
+
 # This script is an extension of Study Simulation.R. It is basically
 # the same code but I'm looping through a few different trap spacings.
 # I'm both storing the output in a list and saving the raw simulated statistics.
@@ -30,10 +32,14 @@ rings <- c(4,4,4,4,4,4,4,4,
 
 
 # Generate a dataframe containing every parameter combination of interest
-TrapSpacing <- seq(from = 1, to = 10, by = 0.25)
-CatchRadius <- seq(from = 0.1, to = 4, by = 0.1)
-Boarder <- seq(from = 3, to = 10, by = 1)
-Density <- seq(from = 0.25, to = 2, by = 0.25)
+# TrapSpacing <- seq(from = 1, to = 10, by = 0.25)
+# CatchRadius <- seq(from = 0.1, to = 4, by = 0.1)
+# Boarder <- seq(from = 3, to = 10, by = 1)
+# Density <- seq(from = 0.25, to = 2, by = 0.25)
+TrapSpacing <- seq(from = 1, to = 6, by = 1)
+CatchRadius <- seq(from = 0.5, to = 4, by = 0.5)
+Boarder <- seq(from = 3, to = 6, by = 1)
+Density <- seq(from = 0.5, to = 2, by = 0.5)
 Parameters <- expand.grid(Density, Boarder, CatchRadius, TrapSpacing)
 names(Parameters) <- c("Density", "Boarder", "CatchRadius", "TrapSpacing")
 Parameters$FieldSize <- 7*Parameters$TrapSpacing + Parameters$Boarder
@@ -60,10 +66,11 @@ VariableSpacingSimulation <- lapply(Parameters_list, function(param) {
   d <- param$Density
   
   # Simulate the studies
-  ncores <- detectCores()
-  cl <- makeCluster(ncores-1, type = "FORK")
-  Studies <- parLapply(cl, 1:iter, function(x) studySim(ts=ts, fs=fs, np=np, delta=delta, nv=nv, d=d))
-  stopCluster(cl)
+  # ncores <- detectCores()
+  # cl <- makeCluster(ncores-1, type = "FORK")
+  # Studies <- parLapply(cl, 1:iter, function(x) studySim(ts=ts, fs=fs, np=np, delta=delta, nv=nv, d=d))
+  Studies <- lapply(1:iter, function(x) studySim(ts=ts, fs=fs, np=np, delta=delta, nv=nv, d=d))
+  # stopCluster(cl)
 
   # Parse the simulated studies
   Studies <- lapply(1:iter, function(x) {
@@ -148,11 +155,11 @@ write.csv(StudyAggregate, paste0("~/Documents/MousePaper/data/StudyAggregate_", 
 # DOUBLE CHECK THAT AHAT IS BEING ASSIGNED CORRECTLY
 # AND ADD A SQUARE NUMBER TO STATSDF BEFORE IT'S RETURNED.
 
-
-lapply(VariableSpacingSimulation, function(x) {
-  dHat_plt <- ggplot(x, aes(x = dHat, color = square)) + geom_density(na.rm = TRUE) + xlim(quantile(na.omit(x$dHat), 0.005)[[1]], quantile(na.omit(x$dHat), 0.995)[[1]])
-  return(dHat_plt)
-})
+# 
+# lapply(VariableSpacingSimulation, function(x) {
+#   dHat_plt <- ggplot(x, aes(x = dHat, color = square)) + geom_density(na.rm = TRUE) + xlim(quantile(na.omit(x$dHat), 0.005)[[1]], quantile(na.omit(x$dHat), 0.995)[[1]])
+#   return(dHat_plt)
+# })
 
 
 

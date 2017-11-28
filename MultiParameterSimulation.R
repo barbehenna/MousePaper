@@ -1,4 +1,5 @@
-# (c) 2017 Alton Barbehenn
+# Copyright (c) 2017 Alton Barbehenn
+
 # This script is an extension of Study Simulation.R. It is basically
 # the same code but I'm looping through a few different trap spacings.
 # I'm both storing the output in a list and saving the raw simulated statistics.

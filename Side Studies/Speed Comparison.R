@@ -1,3 +1,5 @@
+# Copyright (c) 2017 Alton Barbehenn
+
 # This script just serves to compare the speed of the main two ways that 
 # I've found to do parallel computing in R.
 

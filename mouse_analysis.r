@@ -1,3 +1,5 @@
+# Copyright (c) 2017 Alton Barbehenn
+
 ## ---- Extra Libraries ---------
 library(doParallel)
 library(foreach)

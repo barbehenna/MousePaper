@@ -1,3 +1,5 @@
+# Copyright (c) 2017 Alton Barbehenn and Michael Barbehenn
+
 #!/usr/bin/r
 
 ## in the final program Density * FieldSize determines number mice
