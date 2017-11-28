@@ -146,7 +146,7 @@ VariableSpacingSimulation <- lapply(Parameters_list, function(param) {
 # Save to the data directory for later use
 # The working directory should be the mousepaper project directory
 StudyAggregate <- as.data.frame(rbindlist(VariableSpacingSimulation))
-write.csv(StudyAggregate, paste0("data/StudyAggregate_", format(Sys.time(), format = "%Y-%m-%d_%H-%M-%S"), ".csv")) 
+write.csv(StudyAggregate, paste0("data/StudyAggregate_", format(Sys.time(), format = "%Y-%m-%d_%H-%M-%S"), ".csv"), row.names = FALSE) 
 
 
 

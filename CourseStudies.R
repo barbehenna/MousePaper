@@ -5,4 +5,4 @@
 # determine whether or not the ranges are good and if we want to make the resolution finer 
 # for more data points. 
 
-Sim <- read.csv("data/StudyAggregate_2017-11-28_18-44-35.csv", header = TRUE, row.names = NULL)
+Sim <- read.csv("data/StudyAggregate_2017-11-28_22-15-29.csv", header = TRUE, row.names = NULL)
