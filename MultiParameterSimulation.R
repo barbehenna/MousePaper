@@ -1,25 +1,16 @@
 # Copyright (c) 2017 Alton Barbehenn
 
-# This script is an extension of Study Simulation.R. It is basically
-# the same code but I'm looping through a few different trap spacings.
-# I'm both storing the output in a list and saving the raw simulated statistics.
+# This script has many of the same comonents as StudySimulation.R. Whereas in StudySimulation.R
+# I am playing around with visualization and if and where we can detect the edge effect, in this
+# script I'm simulating studies across a large parameter space. With each simulated study I'm
+# I'm calculating the statistics used in a paper by Calhoun-Zippen in Barbehenn 1974. I'm then
+# saving the data for later analyses. This way I can save CPU and understand the parameter space 
+# better before making it finer.
 
 library(parallel)
-library(data.table)
 library(ggplot2)
+library(data.table)
 
-## ----- Simulation Constants----
-# d <- 1 #mice/m^2
-# ts <- 1.5 #m
-# fs <- 7*ts+7 #m
-# np <- as.integer(d*fs*fs) #mice
-# nv <- 4
-# delta <- 0.5
-# iter <- 100
-
-# if (delta > ts/2) {
-#   stop("Something weird may happen with this run becuase a mouse can be caught by two traps in the same forage")
-# }
 
 rings <- c(4,4,4,4,4,4,4,4, 
            4,3,3,3,3,3,3,4, 
@@ -30,48 +21,49 @@ rings <- c(4,4,4,4,4,4,4,4,
            4,3,3,3,3,3,3,4, 
            4,4,4,4,4,4,4,4)
 
-nv <- 4
-
 
 # Generate a dataframe containing every parameter combination of interest
-# Unit of Measure for distance is Sigma
-TrapSpacing <- seq(from = 1, to = 7, by = 0.25)
-CatchRadius <- seq(from = 0.1, to = 2, by = 0.1)
-Border <- seq(from = 3, to = 6, by = 0.5)
-Density <- seq(from = 0.25, to = 2, by = 0.25)
-Parameters <- expand.grid(Density, Border, CatchRadius, TrapSpacing)
-names(Parameters) <- c("Density", "Border", "CatchRadius", "TrapSpacing")
-Parameters$FieldSize <- 7*Parameters$TrapSpacing + Parameters$Border
+# TrapSpacing <- seq(from = 1, to = 10, by = 0.25)
+# CatchRadius <- seq(from = 0.1, to = 4, by = 0.1)
+# Boarder <- seq(from = 3, to = 10, by = 1)
+# Density <- seq(from = 0.25, to = 2, by = 0.25)
+TrapSpacing <- seq(from = 1, to = 6, by = 1)
+CatchRadius <- seq(from = 0.5, to = 4, by = 0.5)
+Boarder <- seq(from = 3, to = 6, by = 1)
+Density <- seq(from = 0.5, to = 2, by = 0.5)
+Parameters <- expand.grid(Density, Boarder, CatchRadius, TrapSpacing)
+names(Parameters) <- c("Density", "Boarder", "CatchRadius", "TrapSpacing")
+Parameters$FieldSize <- 7*Parameters$TrapSpacing + Parameters$Boarder
 Parameters$NumMice <- as.integer(Parameters$Density*Parameters$FieldSize*Parameters$FieldSize)
-# Parameters$Ventures <- 4
 
 remove_rows <- which(Parameters$CatchRadius > Parameters$TrapSpacing/2)
 Parameters <- Parameters[-remove_rows,]
 
 Parameters_list <- split(Parameters, seq(nrow(Parameters)))
 
-#For testing
-Parameters <- Parameters[1:5,]
-Parameters_list <- Parameters_list[1:5]
+# For testing
+# Parameters <- Parameters[1:5,]
+# Parameters_list <- Parameters_list[1:5]
 
 
-iter <- 1000
-print(paste("start:", Sys.time()))
-MultiParameterSimulation <- lapply(Parameters_list, function(param) {
+iter <- 10 #number of simulations per study (set of parameters)
+print(Sys.time())
+VariableSpacingSimulation <- lapply(Parameters_list, function(param) {
   ts <- param$TrapSpacing
   fs <- param$FieldSize
   np <- param$NumMice
   delta <- param$CatchRadius
+  nv <- 4
   d <- param$Density
   
   # Simulate the studies
-  ncores <- detectCores()
-  cl <- makeCluster(ncores-1, type = "FORK")
-  Studies <- parLapply(cl, 1:iter, function(x) studySim(ts=ts, fs=fs, np=np, delta=delta, nv=nv, d=d))
-  # Studies <- lapply(1:iter, function(x) studySim(ts=ts, fs=fs, np=np, delta=delta, nv=nv, d=d))
-  stopCluster(cl)
+  # ncores <- detectCores()
+  # cl <- makeCluster(ncores-1, type = "FORK")
+  # Studies <- parLapply(cl, 1:iter, function(x) studySim(ts=ts, fs=fs, np=np, delta=delta, nv=nv, d=d))
+  Studies <- lapply(1:iter, function(x) studySim(ts=ts, fs=fs, np=np, delta=delta, nv=nv, d=d))
+  # stopCluster(cl)
 
-  # Parse the simulated studies
+  # Parse the simulated studies for the number of mice caught in each of the two periods, per trap
   Studies <- lapply(1:iter, function(x) {
     p1 <- lapply(1:64, function(y) sum(Studies[[x]]$trap[Studies[[x]]$day <= 2] == y))
     p1 <- unlist(p1)
@@ -80,12 +72,15 @@ MultiParameterSimulation <- lapply(Parameters_list, function(param) {
     return(data.frame(simnum=rep(x,64), trap=1:64, period1=p1, period2=p2, total=p1+p2, ring=rings))
   })
 
+  # Build a list of the rings in each square
+  squares <- list(1, 1:2, 1:3, 1:4, 4)
+  
+  # Estimate the area in each of the squares
   aHat <- 1:4 #ring numbers
   aHat <- (ts*2*aHat)^2 #concentric ring areas
   aHat <- c(aHat, aHat[4]-aHat[3]) #just ring 4
-  squares <- list(1, 1:2, 1:3, 1:4, 4)
   
-  # Calculate Calhoun-Zippen statistics
+  # Calculate Calhoun-Zippen and Barbehenn statistics
   Stats <- lapply(1:iter, function(x) {
     p1 <- lapply(squares, function(y) sum(Studies[[x]]$period1[Studies[[x]]$ring %in% y]))
     p2 <- lapply(squares, function(y) sum(Studies[[x]]$period2[Studies[[x]]$ring %in% y]))
@@ -108,11 +103,29 @@ MultiParameterSimulation <- lapply(Parameters_list, function(param) {
       }
       return(pHat)
     })
+    pHatDropNeg <- lapply(pHat, function(x) {
+      if (x < 0 && !is.na(x)) {
+        return(NA)
+      } else {
+        return(x)
+      }
+    })
+    pHatZeroNeg <- lapply(pHat, function(x) {
+      if (x < 0 && !is.na(x)) {
+        return(0)
+      } else {
+        return(x)
+      }
+    })
     pHat <- unlist(pHat)
+    pHatDropNeg <- unlist(pHatDropNeg)
+    pHatZeroNeg <- unlist(pHatZeroNeg)
     return(data.frame(simnum=rep(x,length(squares)),
                       dHat=nHat_dHat[,2],
                       nHat=nHat_dHat[,1],
                       pHat=pHat,
+                      pHatZeroNeg=pHatZeroNeg,
+                      pHatDropNeg=pHatDropNeg,
                       aHat=aHat))
   })
   
@@ -122,31 +135,18 @@ MultiParameterSimulation <- lapply(Parameters_list, function(param) {
   StatsDF$TrapSpacing <- ts
   StatsDF$FielSize <- fs
   StatsDF$CatchRadius <- delta
-  StatsDF$NumVentures <- nv
+  StatsDF$NumVisits <- nv
   StatsDF$density <- d
   
   print(Sys.time())
   return(StatsDF)
 })
 
-StudyAggregate <- as.data.frame(rbindlist(MultiParameterSimulation))
-write.csv(StudyAggregate, paste0("~/Documents/MousePaper/data/StudyAggregate_", Sys.time(), ".csv"), row.names = FALSE)
 
-
-# lapply(MultiParameterSimulation[[sample(5, 1:length(MultiParameterSimulation))]], function(x) {
-#   dHat_plt <- ggplot(x, aes(x = dHat, color = square)) + geom_density(na.rm = TRUE) + xlim(quantile(na.omit(x$dHat), 0.005)[[1]], quantile(na.omit(x$dHat), 0.995)[[1]])
-#   return(dHat_plt)
-# })
-
-
-
-
-
-
-
-
-
-
+# Save to the data directory for later use
+# The working directory should be the mousepaper project directory
+StudyAggregate <- as.data.frame(rbindlist(VariableSpacingSimulation))
+write.csv(StudyAggregate, paste0("data/StudyAggregate_", format(Sys.time(), format = "%Y-%m-%d_%H-%M-%S"), ".csv")) 
 
 
 
