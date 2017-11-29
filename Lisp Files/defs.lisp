@@ -1,3 +1,5 @@
+;;; Copyright (c) 2017 Michael Barbehenn
+
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Base: 10; Package: CL-User; -*-
 (in-package 'user)
 ;;;;;
