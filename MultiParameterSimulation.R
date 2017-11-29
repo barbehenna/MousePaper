@@ -133,7 +133,7 @@ VariableSpacingSimulation <- lapply(Parameters_list, function(param) {
   StatsDF <- as.data.frame(rbindlist(Stats))
   StatsDF$square <- factor(rep(1:5, times = iter))
   StatsDF$TrapSpacing <- ts
-  StatsDF$FielSize <- fs
+  StatsDF$FieldSize <- fs
   StatsDF$CatchRadius <- delta
   StatsDF$NumVisits <- nv
   StatsDF$density <- d
