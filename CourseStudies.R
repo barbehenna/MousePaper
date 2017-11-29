@@ -26,22 +26,36 @@ AggStats <- aggregate(cbind(dHat, nHat, pHat, pHatZeroNeg, pHatDropNeg, aHat) ~ 
 # for more data points. 
 
 library(data.table)
+library(ggplot2)
 
 Sim <- read.csv("data/StudyAggregate_2017-11-28_18-44-35.csv", header = TRUE, row.names = NULL)
 
 
 # Aggregate the statistics with the same parameters
 # I chose median at this point because of it's robustness
-AggStats <- aggregate(cbind(dHat, nHat, pHat, pHatZeroNeg, pHatDropNeg, aHat) ~ square + TrapSpacing + FieldSize + CatchRadius + density, data = Sim, median)
+# AggStats <- aggregate(cbind(dHat, nHat, pHat, pHatZeroNeg, pHatDropNeg, aHat) ~ square + TrapSpacing + FieldSize + CatchRadius + density, data = Sim, median)
 
 # Using the data.table structure might be faster
+# OMITING NA VALUES!!
 Sim <- data.table(Sim)
-AggStats <- Sim[, .(med_dHat = median(dHat), med_nHat = median(nHat)), by = .(square, TrapSpacing, FieldSize, CatchRadius, density)]
+AggStats <- Sim[, .(med_dHat = median(na.omit(dHat)), 
+                    med_nHat = median(na.omit(nHat)),
+                    med_pHat = median(na.omit(pHat)),
+                    med_pHatZeroNeg = median(na.omit(pHatZeroNeg)),
+                    med_pHatDropNeg = median(na.omit(pHatDropNeg)),
+                    med_aHat = median(na.omit(aHat))), 
+                by = .(square, TrapSpacing, FieldSize, CatchRadius, density)]
 
+# Look at the correlation between density and dHat, colored by ring/square
+p <- ggplot(data = AggStats) + geom_boxplot(mapping = aes(x = factor(density), y = med_dHat))
+p
+cor.test(x = AggStats$density, y = AggStats$med_dHat, method = "pearson")
+cor.test(x = AggStats$density, y = AggStats$med_dHat, method = "kendall")
 
-
-
-
+# So they appear to be correlated but look systematically biased
+# We can see this by looking at the peaks in the density plots
+p <- ggplot(data = AggStats) + geom_density(mapping = aes(x = med_dHat, colour = factor(square)))
+p
 
 
 
