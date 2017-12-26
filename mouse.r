@@ -38,7 +38,7 @@ studySim <- function(ts, fs, np, delta, nv, d) {
     possible_traps <- traps(trap_x = gx, trap_y = gy, forage_x = vx[v_range], forage_y = vy[v_range], delta = delta, nv = nv)
     trap <- possible_traps$trap[!is.na(possible_traps$trap)][1] #first trap the mouse gets caught in (trap = NA indicates that the mouse didn't get caught)
     day <- which(possible_traps$trap==trap)[1] #caught on first day mouse got to that trap
-    mice <- rbind.data.frame(mice, c(trap, day))
+    mice <- rbind(mice, c(trap, day))
   }
   names(mice) <- c("trap", "day")
   mice <- na.omit(mice)
