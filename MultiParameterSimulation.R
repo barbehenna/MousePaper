@@ -42,8 +42,8 @@ Parameters <- Parameters[-remove_rows,]
 Parameters_list <- split(Parameters, seq(nrow(Parameters)))
 
 # For testing
-# Parameters <- Parameters[1:5,]
-# Parameters_list <- Parameters_list[1:5]
+Parameters <- Parameters[1:20,]
+Parameters_list <- Parameters_list[1:20]
 
 
 iter <- 10 #number of simulations per study (set of parameters)
@@ -64,12 +64,18 @@ VariableSpacingSimulation <- lapply(Parameters_list, function(param) {
   # stopCluster(cl)
 
   # Parse the simulated studies for the number of mice caught in each of the two periods, per trap
-  Studies <- lapply(1:iter, function(x) {
-    p1 <- lapply(1:64, function(y) sum(Studies[[x]]$trap[Studies[[x]]$day <= 2] == y))
+  Studies <- lapply(Studies, function(x) {
+    p1 <- lapply(1:64, function(y) sum(x$trap[x$day <= 2] == y))
     p1 <- unlist(p1)
-    p2 <- lapply(1:64, function(y) sum(Studies[[x]]$trap[Studies[[x]]$day >= 3] == y))
+    p2 <- lapply(1:64, function(y) sum(x$trap[x$day >= 3] == y))
     p2 <- unlist(p2)
-    return(data.frame(simnum=rep(x,64), trap=1:64, period1=p1, period2=p2, total=p1+p2, ring=rings))
+    # return(data.frame(simnum=rep(x,64), trap=1:64, period1=p1, period2=p2, total=p1+p2, ring=rings))
+    return(data.frame(trap=1:64, period1=p1, period2=p2, total=p1+p2, ring=rings))
+  })
+  
+  # Label each study
+  Studies <- lapply(1:iter, function(x) {
+    return(cbind(Studies[[x]], simnum = rep(x,64)))
   })
 
   # Build a list of the rings in each square
@@ -81,9 +87,9 @@ VariableSpacingSimulation <- lapply(Parameters_list, function(param) {
   aHat <- c(aHat, aHat[4]-aHat[3]) #just ring 4
   
   # Calculate Calhoun-Zippen and Barbehenn statistics
-  Stats <- lapply(1:iter, function(x) {
-    p1 <- lapply(squares, function(y) sum(Studies[[x]]$period1[Studies[[x]]$ring %in% y]))
-    p2 <- lapply(squares, function(y) sum(Studies[[x]]$period2[Studies[[x]]$ring %in% y]))
+  Stats <- lapply(Studies, function(x) {
+    p1 <- lapply(squares, function(y) sum(x$period1[x$ring %in% y]))
+    p2 <- lapply(squares, function(y) sum(x$period2[x$ring %in% y]))
     nHat_dHat <- lapply(1:length(squares), function(x) {
       if (p1[[x]] == p2[[x]]) {
         nHat <- NA
@@ -120,7 +126,7 @@ VariableSpacingSimulation <- lapply(Parameters_list, function(param) {
     pHat <- unlist(pHat)
     pHatDropNeg <- unlist(pHatDropNeg)
     pHatZeroNeg <- unlist(pHatZeroNeg)
-    return(data.frame(simnum=rep(x,length(squares)),
+    return(data.frame(#simnum=rep(x,length(squares)),
                       dHat=nHat_dHat[,2],
                       nHat=nHat_dHat[,1],
                       pHat=pHat,
@@ -128,7 +134,7 @@ VariableSpacingSimulation <- lapply(Parameters_list, function(param) {
                       pHatDropNeg=pHatDropNeg,
                       aHat=aHat))
   })
-  
+
   # Save the data
   StatsDF <- as.data.frame(rbindlist(Stats))
   StatsDF$square <- factor(rep(1:5, times = iter))
@@ -137,15 +143,16 @@ VariableSpacingSimulation <- lapply(Parameters_list, function(param) {
   StatsDF$CatchRadius <- delta
   StatsDF$NumVisits <- nv
   StatsDF$density <- d
-  
+  StatsDF$simnum <- rep(1:iter, each = 5)
+
   print(Sys.time())
   return(StatsDF)
 })
 
-
 # Save to the data directory for later use
 # The working directory should be the mousepaper project directory
 StudyAggregate <- as.data.frame(rbindlist(VariableSpacingSimulation))
+StudyAggregate$paramnum <- rep(1:length(Parameters_list), each = iter*5)
 write.csv(StudyAggregate, paste0("data/StudyAggregate_", format(Sys.time(), format = "%Y-%m-%d_%H-%M-%S"), ".csv"), row.names = FALSE) 
 
 
