@@ -8,7 +8,9 @@
 library(data.table)
 library(ggplot2)
 
-Sim <- read.csv("data/StudyAggregate_20171227_000337.csv", header = TRUE, row.names = NULL)
+# Sim <- read.csv("data/StudyAggregate_20171227_000337.csv", header = TRUE, row.names = NULL)
+Sim <- read.csv("data/StudyAggregate_20171227_180809.csv", header = TRUE, row.names = NULL)
+
 
 
 # Aggregate the statistics with the same parameters
@@ -36,6 +38,15 @@ AggStats <- Sim[, .(med_dHat = median(na.omit(dHat)),
                     med_aHat = median(na.omit(aHat))), 
                 by = .(square, TrapSpacing, FieldSize, CatchRadius, density)]
 
+
+# Want to understand what values affect the estimate of density
+model <- lm(avg_dHat ~ square + TrapSpacing + FieldSize + CatchRadius + density, data = AggStats)
+summary(model)
+
+# Looks like we can ignore the effects of Trap Spacing and Catch Radius on our density estimation
+model <- lm(avg_dHat ~ square + CatchRadius + density, data = AggStats)
+summary(model)
+
 # Look at the correlation between density and dHat, colored by ring/square
 p <- ggplot(data = AggStats) + geom_boxplot(mapping = aes(x = factor(density), y = med_dHat))
 p
@@ -51,11 +62,12 @@ p
 
 
 
+p <- ggplot(data = AggStats[AggStats$square < 2]) + geom_point(mapping = aes(x = density, y = med_dHat, color = factor(CatchRadius)))
+p
 
 
-
-
-
+p <- ggplot(data = AggStats[AggStats$square < 2]) + geom_density(mapping = aes(med_dHat, colour = factor(CatchRadius)))
+p
 
 
 
