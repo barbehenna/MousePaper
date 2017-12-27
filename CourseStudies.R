@@ -18,11 +18,21 @@ Sim <- read.csv("data/StudyAggregate_20171227_000337.csv", header = TRUE, row.na
 # Using the data.table structure might be faster and more readable
 # OMITING NA VALUES!!
 Sim <- data.table(Sim)
-AggStats <- Sim[, .(med_dHat = median(na.omit(dHat)), 
+AggStats <- Sim[, .(med_dHat = median(na.omit(dHat)),
+                    avg_dHat = mean(na.omit(dHat)),
+                    std_dHat = sd(na.omit(dHat)),
                     med_nHat = median(na.omit(nHat)),
+                    avg_nHat = mean(na.omit(nHat)),
+                    std_nHat = sd(na.omit(nHat)),
                     med_pHat = median(na.omit(pHat)),
+                    avg_pHat = mean(na.omit(pHat)),
+                    std_pHat = sd(na.omit(pHat)),
                     med_pHatZeroNeg = median(na.omit(pHatZeroNeg)),
+                    avg_pHatZeroNeg = mean(na.omit(pHatZeroNeg)),
+                    std_pHatZeroNeg = sd(na.omit(pHatZeroNeg)),
                     med_pHatDropNeg = median(na.omit(pHatDropNeg)),
+                    avg_pHatDropNeg = mean(na.omit(pHatDropNeg)),
+                    std_pHatDropNeg = sd(na.omit(pHatDropNeg)),
                     med_aHat = median(na.omit(aHat))), 
                 by = .(square, TrapSpacing, FieldSize, CatchRadius, density)]
 
