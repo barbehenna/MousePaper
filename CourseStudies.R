@@ -8,14 +8,14 @@
 library(data.table)
 library(ggplot2)
 
-Sim <- read.csv("data/StudyAggregate_2017-11-28_18-44-35.csv", header = TRUE, row.names = NULL)
+Sim <- read.csv("data/StudyAggregate_20171227_000337.csv", header = TRUE, row.names = NULL)
 
 
 # Aggregate the statistics with the same parameters
 # I chose median at this point because of it's robustness
 # AggStats <- aggregate(cbind(dHat, nHat, pHat, pHatZeroNeg, pHatDropNeg, aHat) ~ square + TrapSpacing + FieldSize + CatchRadius + density, data = Sim, median)
 
-# Using the data.table structure might be faster
+# Using the data.table structure might be faster and more readable
 # OMITING NA VALUES!!
 Sim <- data.table(Sim)
 AggStats <- Sim[, .(med_dHat = median(na.omit(dHat)), 
