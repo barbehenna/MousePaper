@@ -1,0 +1,5 @@
+File Name, Comments
+CatchesMatrix_1000000, bulk simulation returning matricies
+StudyAggregate_20171227_000337, course studies 10 sims per parameter set (stats calculated using lapply)
+StudyAggregate_20171227_180809, course studies 100 sims per parameter set (stats calculated using vectors)
+StudyAggregate_20171227_213702, course studies 100 sims per parameter set (stats calculated using lapply)
