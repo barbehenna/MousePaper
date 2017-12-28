@@ -3,3 +3,5 @@ CatchesMatrix_1000000, bulk simulation returning matricies
 StudyAggregate_20171227_000337, course studies 10 sims per parameter set (stats calculated using lapply)
 StudyAggregate_20171227_180809, course studies 100 sims per parameter set (stats calculated using vectors)
 StudyAggregate_20171227_213702, course studies 100 sims per parameter set (stats calculated using lapply)
+StudyAggregate_20171228_010923, course studies 100 sims per parameter set (stats calculated using vectors higher level parallelization. Seems like it pre-partitioned the parameter space with one core getting all the hard ones)
+StudyAggregate_20171228_025600, course studies 100 sims per parameter set (stats calculated using vectors higher level parallelization. Reordered the parameter set to fix allocation problem)
