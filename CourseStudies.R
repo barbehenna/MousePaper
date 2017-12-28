@@ -8,9 +8,7 @@
 library(data.table)
 library(ggplot2)
 
-# Sim <- read.csv("data/StudyAggregate_20171227_000337.csv", header = TRUE, row.names = NULL)
-Sim <- read.csv("data/StudyAggregate_20171227_180809.csv", header = TRUE, row.names = NULL)
-
+Sim <- read.csv("data/20171228_220149_Stats.csv", header = TRUE, row.names = NULL)
 
 
 # Aggregate the statistics with the same parameters

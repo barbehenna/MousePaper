@@ -7,11 +7,14 @@
 # saving the data for later analyses. This way I can save CPU and understand the parameter space 
 # better before making it finer.
 
+# Libraries
 library(parallel)
-library(ggplot2)
 library(data.table)
 
 
+# Simulation constants
+iterations <- 5
+nv <- 4
 rings <- c(4,4,4,4,4,4,4,4, 
            4,3,3,3,3,3,3,4, 
            4,3,2,2,2,2,3,4, 
@@ -20,13 +23,10 @@ rings <- c(4,4,4,4,4,4,4,4,
            4,3,2,2,2,2,3,4, 
            4,3,3,3,3,3,3,4, 
            4,4,4,4,4,4,4,4)
+squares <- list(1, 1:2, 1:3, 1:4, 4) # List of the rings in each square
 
 
-# Generate a dataframe containing every parameter combination of interest
-# TrapSpacing <- seq(from = 1, to = 10, by = 0.25)
-# CatchRadius <- seq(from = 0.1, to = 4, by = 0.1)
-# Boarder <- seq(from = 3, to = 10, by = 1)
-# Density <- seq(from = 0.25, to = 2, by = 0.25)
+# List of viable parameters combinations 
 TrapSpacing <- seq(from = 1, to = 6, by = 1)
 CatchRadius <- seq(from = 0.5, to = 4, by = 0.5)
 Boarder <- seq(from = 3, to = 6, by = 1)
@@ -36,53 +36,54 @@ names(Parameters) <- c("Density", "Boarder", "CatchRadius", "TrapSpacing")
 Parameters$FieldSize <- 7*Parameters$TrapSpacing + Parameters$Boarder
 Parameters$NumMice <- as.integer(Parameters$Density*Parameters$FieldSize*Parameters$FieldSize)
 
-remove_rows <- which(Parameters$CatchRadius > Parameters$TrapSpacing/2)
+remove_rows <- which(Parameters$CatchRadius > Parameters$TrapSpacing/2) # Not viable
 Parameters <- Parameters[-remove_rows,]
 
-Parameters_list <- split(Parameters, seq(nrow(Parameters)))
+Parameters$paramset <- 1:nrow(Parameters) # Label each set of parameters for later reference
 
+Parameters_list <- split(Parameters, seq(nrow(Parameters)))# Split dataframe by row -> lapply across list
+Parameters_list <- rep(Parameters_list, times = iterations)
+Parameters_list <- lapply(seq_along(Parameters_list), function(x) {
+  cbind(Parameters_list[[x]], "UniqueID" = x)
+})
+
+
+###############
 # For testing
-# Parameters <- Parameters[1:20,]
-# Parameters_list <- Parameters_list[1:20]
+###############
+# Parameters_list <- Parameters_list[c(1:4, 334:339)]
 
 
-iter <- 100 #number of simulations per study (set of parameters)
-Parameters_list <- rep(Parameters_list, times = iter)
-
-print(Sys.time())
+# Start cores for parallelization
 ncores <- detectCores()
 cl <- makeCluster(ncores-1, type = "FORK")
 
-VariableSpacingSimulation <- parLapply(cl, Parameters_list, function(param) {
-  ts <- param$TrapSpacing
-  fs <- param$FieldSize
-  np <- param$NumMice
-  delta <- param$CatchRadius
-  nv <- 4
-  d <- param$Density
+
+# Simulate trapping data
+# Then look at the trapping data by trap in two periods (day={1,2} and day={3,4})
+TrapData <- parLapply(cl, Parameters_list, function(x) {
+# TrapData <- lapply(Parameters_list, function(x) {
+  sim <- studySim(ts=x$TrapSpacing, fs=x$FieldSize, np=x$NumMice, delta=x$CatchRadius, nv=nv, d=x$Density)
+  out <- data.frame(period1 = unlist(lapply(1:64, function(y) sum(sim$trap[sim$day <= 2] == y))),
+                    period2 = unlist(lapply(1:64, function(y) sum(sim$trap[sim$day >= 3] == y))),
+                    ring = rings)
+  out$paramset <- x$paramset
+  out$UniqueID <- x$UniqueID
+  return(out)
+})
+
+
+# Analyze trapping data
+Stats <- parLapply(cl, TrapData, function(x) {
+# Stats <- lapply(TrapData, function(x) {
+  ts <- Parameters$TrapSpacing[Parameters$paramset == x$paramset[1]]
   
-  # Simulate the study
-  Study <- studySim(ts=ts, fs=fs, np=np, delta=delta, nv=nv, d=d)
-  
-  # Parse the simulated study for the number of mice caught in each of the two periods, per trap
-  # Study <- data.frame(period1 = sum(Study$trap[Study$day <= 2] == y),
-  #                     period2 = sum(Study$trap[Study$day >= 3] == y),
-  #                     ring = rings)
-  Study <- data.frame(period1 = unlist(lapply(1:64, function(y) sum(Study$trap[Study$day <= 2] == y))),
-                      period1 = unlist(lapply(1:64, function(y) sum(Study$trap[Study$day >= 3] == y))),
-                      ring = rings)
-  
-  # Build a list of the rings in each square
-  squares <- list(1, 1:2, 1:3, 1:4, 4)
-  
-  # Estimate the area in each of the squares
   aHat <- 1:4 #ring numbers
   aHat <- (ts*2*aHat)^2 #concentric ring areas
   aHat <- c(aHat, aHat[4]-aHat[3]) #just ring 4
   
-  # Calculate Calhoun-Zippen and Barbehenn statistics
-  p1 <- unlist(lapply(squares, function(y) sum(Study$period1[Study$ring %in% y])))
-  p2 <- unlist(lapply(squares, function(y) sum(Study$period2[Study$ring %in% y])))
+  p1 <- unlist(lapply(squares, function(y) sum(x$period1[x$ring %in% y])))
+  p2 <- unlist(lapply(squares, function(y) sum(x$period2[x$ring %in% y])))
   
   nHat <- (p1^2)/(p1-p2)
   nHat[which(nHat == Inf)] <- NA #Keep as Inf? Store both or post process?
@@ -98,213 +99,26 @@ VariableSpacingSimulation <- parLapply(cl, Parameters_list, function(param) {
   pHatDropNeg[which(pHat < 0)] <- 0 # NA<0 returns NA and the which only returns TRUE locations
   
   # Save the data
-  StatsDF <- data.frame(nHat, dHat, pHat, pHatDropNeg, pHatZeroNeg)
-  StatsDF$square <- 1:5
-  StatsDF$TrapSpacing <- ts
-  StatsDF$FieldSize <- fs
-  StatsDF$CatchRadius <- delta
-  StatsDF$NumVisits <- nv
-  StatsDF$density <- d
-  
-  print(Sys.time())
-  return(StatsDF)
+  out <- data.frame(nHat, dHat, pHat, pHatDropNeg, pHatZeroNeg, aHat)
+  out$paramset <- x$paramset[1]
+  out$UniqueID <- x$UniqueID[1]
+  return(out)
 })
+
+Stats <- rbindlist(Stats)
+TrapData <- rbindlist(TrapData)
+
+
+# Stop clusters
 stopCluster(cl)
-print(Sys.time())
-
-StudyAggregate <- as.data.frame(rbindlist(VariableSpacingSimulation))
-write.csv(StudyAggregate, paste0("data/StudyAggregate_", format(Sys.time(), format = "%Y%m%d_%H%M%S"), ".csv"), row.names = FALSE)
 
 
+# Save data
+CompleteTime <- format(Sys.time(), format = "%Y%m%d_%H%M%S")
 
+write.csv(Stats, paste0("data/", CompleteTime, "_Stats.csv"), row.names = FALSE)
+write.csv(Parameters, paste0("data/", CompleteTime, "_Parameters.csv"), row.names = FALSE)
+write.csv(TrapData, paste0("data/", CompleteTime, "_TrapData.csv"), row.names = FALSE)
 
-
-
-# print(Sys.time())
-# VariableSpacingSimulation <- lapply(Parameters_list, function(param) {
-#   ts <- param$TrapSpacing
-#   fs <- param$FieldSize
-#   np <- param$NumMice
-#   delta <- param$CatchRadius
-#   nv <- 4
-#   d <- param$Density
-# 
-#   # Simulate the studies
-#   ncores <- detectCores()
-#   cl <- makeCluster(ncores-1, type = "FORK")
-#   Studies <- parLapply(cl, 1:iter, function(x) studySim(ts=ts, fs=fs, np=np, delta=delta, nv=nv, d=d))
-#   # Studies <- lapply(1:iter, function(x) studySim(ts=ts, fs=fs, np=np, delta=delta, nv=nv, d=d))
-#   stopCluster(cl)
-# 
-#   # Parse the simulated studies for the number of mice caught in each of the two periods, per trap
-#   Studies <- lapply(Studies, function(x) {
-#     p1 <- lapply(1:64, function(y) sum(x$trap[x$day <= 2] == y))
-#     p1 <- unlist(p1)
-#     p2 <- lapply(1:64, function(y) sum(x$trap[x$day >= 3] == y))
-#     p2 <- unlist(p2)
-#     # return(data.frame(simnum=rep(x,64), trap=1:64, period1=p1, period2=p2, total=p1+p2, ring=rings))
-#     return(data.frame(trap=1:64, period1=p1, period2=p2, total=p1+p2, ring=rings))
-#   })
-# 
-#   # Build a list of the rings in each square
-#   squares <- list(1, 1:2, 1:3, 1:4, 4)
-# 
-#   # Estimate the area in each of the squares
-#   aHat <- 1:4 #ring numbers
-#   aHat <- (ts*2*aHat)^2 #concentric ring areas
-#   aHat <- c(aHat, aHat[4]-aHat[3]) #just ring 4
-# 
-#   # Calculate Calhoun-Zippen and Barbehenn statistics
-#   Stats <- lapply(Studies, function(x) {
-#     p1 <- unlist(lapply(squares, function(y) sum(x$period1[x$ring %in% y])))
-#     p2 <- unlist(lapply(squares, function(y) sum(x$period2[x$ring %in% y])))
-# 
-#     nHat <- (p1^2)/(p1-p2)
-#     nHat[which(nHat == Inf)] <- NA #Keep as Inf? Store both or post process?
-#     dHat <- nHat/aHat
-# 
-#     pHat <- 1 - sqrt(p2/p1)
-#     pHat[which(pHat == Inf)] <- NA
-# 
-#     pHatDropNeg <- pHat
-#     pHatDropNeg[which(pHat < 0)] <- NA # NA<0 returns NA and the which only returns TRUE locations
-# 
-#     pHatZeroNeg <- pHat
-#     pHatDropNeg[which(pHat < 0)] <- 0 # NA<0 returns NA and the which only returns TRUE locations
-# 
-#     return(data.frame(#simnum=rep(x,length(squares)),
-#                       dHat=nHat,
-#                       nHat=dHat,
-#                       pHat=pHat,
-#                       pHatZeroNeg=pHatZeroNeg,
-#                       pHatDropNeg=pHatDropNeg,
-#                       aHat=aHat))
-#   })
-# 
-#   # Save the data
-#   StatsDF <- as.data.frame(rbindlist(Stats))
-#   StatsDF$square <- factor(rep(1:5, times = iter))
-#   StatsDF$TrapSpacing <- ts
-#   StatsDF$FieldSize <- fs
-#   StatsDF$CatchRadius <- delta
-#   StatsDF$NumVisits <- nv
-#   StatsDF$density <- d
-#   StatsDF$simnum <- rep(1:iter, each = 5)
-# 
-#   print(Sys.time())
-#   return(StatsDF)
-# })
-# 
-# # Save to the data directory for later use
-# # The working directory should be the mousepaper project directory
-# StudyAggregate <- as.data.frame(rbindlist(VariableSpacingSimulation))
-# StudyAggregate$paramnum <- rep(1:length(Parameters_list), each = iter*5)
-# write.csv(StudyAggregate, paste0("data/StudyAggregate_", format(Sys.time(), format = "%Y%m%d_%H%M%S"), ".csv"), row.names = FALSE)
-
-
-
-
-
-# This is an old implementation and is included for reference and comparison
-
-# VariableSpacingSimulation <- lapply(Parameters_list, function(param) {
-#   ts <- param$TrapSpacing
-#   fs <- param$FieldSize
-#   np <- param$NumMice
-#   delta <- param$CatchRadius
-#   nv <- 4
-#   d <- param$Density
-# 
-#   # Simulate the studies
-#   ncores <- detectCores()
-#   cl <- makeCluster(ncores-1, type = "FORK")
-#   Studies <- parLapply(cl, 1:iter, function(x) studySim(ts=ts, fs=fs, np=np, delta=delta, nv=nv, d=d))
-#   # Studies <- lapply(1:iter, function(x) studySim(ts=ts, fs=fs, np=np, delta=delta, nv=nv, d=d))
-#   stopCluster(cl)
-# 
-#   # Parse the simulated studies for the number of mice caught in each of the two periods, per trap
-#   Studies <- lapply(Studies, function(x) {
-#     p1 <- lapply(1:64, function(y) sum(x$trap[x$day <= 2] == y))
-#     p1 <- unlist(p1)
-#     p2 <- lapply(1:64, function(y) sum(x$trap[x$day >= 3] == y))
-#     p2 <- unlist(p2)
-#     # return(data.frame(simnum=rep(x,64), trap=1:64, period1=p1, period2=p2, total=p1+p2, ring=rings))
-#     return(data.frame(trap=1:64, period1=p1, period2=p2, total=p1+p2, ring=rings))
-#   })
-# 
-#   # Build a list of the rings in each square
-#   squares <- list(1, 1:2, 1:3, 1:4, 4)
-# 
-#   # Estimate the area in each of the squares
-#   aHat <- 1:4 #ring numbers
-#   aHat <- (ts*2*aHat)^2 #concentric ring areas
-#   aHat <- c(aHat, aHat[4]-aHat[3]) #just ring 4
-# 
-#   # Calculate Calhoun-Zippen and Barbehenn statistics
-#   Stats <- lapply(Studies, function(x) {
-#     p1 <- lapply(squares, function(y) sum(x$period1[x$ring %in% y]))
-#     p2 <- lapply(squares, function(y) sum(x$period2[x$ring %in% y]))
-#     nHat_dHat <- lapply(1:length(squares), function(x) {
-#       if (p1[[x]] == p2[[x]]) {
-#         nHat <- NA
-#         dHat <- NA
-#       } else {
-#         nHat <- (p1[[x]]^2)/(p1[[x]]-p2[[x]])
-#         dHat <- nHat/aHat[[x]]
-#       }
-#       return(c(nHat, dHat))
-#     })
-#     nHat_dHat <- do.call(rbind, nHat_dHat)
-#     pHat <- lapply(1:length(squares), function(x) {
-#       if (p1[[x]] == 0) {
-#         pHat <- NA
-#       } else {
-#         pHat <- 1 - sqrt(p2[[x]]/p1[[x]])
-#       }
-#       return(pHat)
-#     })
-#     pHatDropNeg <- lapply(pHat, function(x) {
-#       if (x < 0 && !is.na(x)) {
-#         return(NA)
-#       } else {
-#         return(x)
-#       }
-#     })
-#     pHatZeroNeg <- lapply(pHat, function(x) {
-#       if (x < 0 && !is.na(x)) {
-#         return(0)
-#       } else {
-#         return(x)
-#       }
-#     })
-#     pHat <- unlist(pHat)
-#     pHatDropNeg <- unlist(pHatDropNeg)
-#     pHatZeroNeg <- unlist(pHatZeroNeg)
-#     return(data.frame(#simnum=rep(x,length(squares)),
-#       dHat=nHat_dHat[,2],
-#       nHat=nHat_dHat[,1],
-#       pHat=pHat,
-#       pHatZeroNeg=pHatZeroNeg,
-#       pHatDropNeg=pHatDropNeg,
-#       aHat=aHat))
-#   })
-# 
-#   # Save the data
-#   StatsDF <- as.data.frame(rbindlist(Stats))
-#   StatsDF$square <- factor(rep(1:5, times = iter))
-#   StatsDF$TrapSpacing <- ts
-#   StatsDF$FieldSize <- fs
-#   StatsDF$CatchRadius <- delta
-#   StatsDF$NumVisits <- nv
-#   StatsDF$density <- d
-# 
-#   print(Sys.time())
-#   return(StatsDF)
-# })
-# 
-# 
-# StudyAggregate <- as.data.frame(rbindlist(VariableSpacingSimulation))
-# StudyAggregate$paramnum <- rep(1:length(Parameters_list), each = iter*5)
-# write.csv(StudyAggregate, paste0("data/StudyAggregate_", format(Sys.time(), format = "%Y%m%d_%H%M%S"), ".csv"), row.names = FALSE)
 
 
