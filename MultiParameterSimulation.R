@@ -47,7 +47,7 @@ Parameters_list <- split(Parameters, seq(nrow(Parameters)))
 
 
 iter <- 100 #number of simulations per study (set of parameters)
-Parameters_list <- rep(Parameters_list, each = iter)
+Parameters_list <- rep(Parameters_list, times = iter)
 
 print(Sys.time())
 ncores <- detectCores()
@@ -65,8 +65,11 @@ VariableSpacingSimulation <- parLapply(cl, Parameters_list, function(param) {
   Study <- studySim(ts=ts, fs=fs, np=np, delta=delta, nv=nv, d=d)
   
   # Parse the simulated study for the number of mice caught in each of the two periods, per trap
-  Study <- data.frame(period1 = sum(x$trap[x$day <= 2] == y),
-                      period2 = sum(x$trap[x$day >= 3] == y),
+  # Study <- data.frame(period1 = sum(Study$trap[Study$day <= 2] == y),
+  #                     period2 = sum(Study$trap[Study$day >= 3] == y),
+  #                     ring = rings)
+  Study <- data.frame(period1 = unlist(lapply(1:64, function(y) sum(Study$trap[Study$day <= 2] == y))),
+                      period1 = unlist(lapply(1:64, function(y) sum(Study$trap[Study$day >= 3] == y))),
                       ring = rings)
   
   # Build a list of the rings in each square
@@ -78,8 +81,8 @@ VariableSpacingSimulation <- parLapply(cl, Parameters_list, function(param) {
   aHat <- c(aHat, aHat[4]-aHat[3]) #just ring 4
   
   # Calculate Calhoun-Zippen and Barbehenn statistics
-  p1 <- unlist(lapply(squares, function(y) sum(Study$period1[x$ring %in% y])))
-  p2 <- unlist(lapply(squares, function(y) sum(Study$period2[x$ring %in% y])))
+  p1 <- unlist(lapply(squares, function(y) sum(Study$period1[Study$ring %in% y])))
+  p2 <- unlist(lapply(squares, function(y) sum(Study$period2[Study$ring %in% y])))
   
   nHat <- (p1^2)/(p1-p2)
   nHat[which(nHat == Inf)] <- NA #Keep as Inf? Store both or post process?
@@ -107,7 +110,7 @@ VariableSpacingSimulation <- parLapply(cl, Parameters_list, function(param) {
   return(StatsDF)
 })
 stopCluster(cl)
-
+print(Sys.time())
 
 StudyAggregate <- as.data.frame(rbindlist(VariableSpacingSimulation))
 write.csv(StudyAggregate, paste0("data/StudyAggregate_", format(Sys.time(), format = "%Y%m%d_%H%M%S"), ".csv"), row.names = FALSE)
