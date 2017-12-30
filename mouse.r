@@ -188,8 +188,6 @@ matrixSim <- function() {
 #Returns the traps, if any, that the mouse gets caught in for forage
 #Pretty sure this approach maintains the foraging order
 traps <- function(trap_x, trap_y, forage_x, forage_y, delta, nv){
-  dimension = length(trap_x)/length(trap_x[trap_x == trap_x[1]])
-  
   dx <- lapply(forage_x, function(x) which(abs(x - trap_x) <= delta))
   dx <- lapply(dx, function(x) unique(trap_x[x]))
   dx <- lapply(dx, function(x) ifelse(length(x)>0, x, NA))
@@ -200,7 +198,6 @@ traps <- function(trap_x, trap_y, forage_x, forage_y, delta, nv){
   dy <- lapply(dy, function(x) ifelse(length(x)>0, x, NA))
   dy <- unlist(dy)
   
-  # possible_traps <- lapply(1:length(dx), function(x) if(is.na(dx[x]) || is.na(dy[x])) {NA} else {intersect(which(trap_x==dx[x]), which(trap_y==dy[x]))})
   possible_traps <- lapply(1:length(dx), function(x) if(is.na(dx[x]) || is.na(dy[x])) {NA} else {intersect(which(trap_x==dx[x]), which(trap_y==dy[x]))})
   possible_traps <- unlist(possible_traps)
   possible_traps <- data.frame(trap=possible_traps, day=1:nv)

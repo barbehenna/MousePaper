@@ -76,24 +76,23 @@ NumericMatrix trapSim1(double ts, double fs, double np, double delta, int nv) {
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
       trapCoords(8*i+j, 0) = b[j];
-      trapCoords(8*i+j, 1) = b[i];
+      trapCoords(8*i+j, 1) = -1*b[i];
     }
   }
   
   // ------ Generate Mouse Visit Locations ------
   // Time scales linearly with number of mice (so quadratically with field size)
   double x, y;
-  NumericMatrix visits(np*nv, 2); //where each mouse visits
+  NumericVector fx(nv), fy(nv); // forage locations
+  NumericMatrix visits(np*nv, 2); // store where each mouse visits
   for (int mouse = 0; mouse < np; mouse++) {
-    // x = fs * (0.5 - random_uniform());
-    // y = fs * (0.5 - random_uniform());
     x = fs * (0.5 - runif(1)(0));
     y = fs * (0.5 - runif(1)(0));
+    fx = x + rnorm(nv);
+    fy = y + rnorm(nv);
     for (int trip = 0; trip < 4; trip++) {
-      // visits(mouse*4+trip, 0) = x + random_norm();
-      // visits(mouse*4+trip, 1) = y + random_norm();
-      visits(mouse*4+trip, 0) = x + rnorm(1)(0);
-      visits(mouse*4+trip, 1) = y + rnorm(1)(0);
+      visits(mouse*4+trip, 0) = fx(trip);
+      visits(mouse*4+trip, 1) = fy(trip);
     }
   }
   
