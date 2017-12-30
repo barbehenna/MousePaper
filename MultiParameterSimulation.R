@@ -10,10 +10,12 @@
 # Libraries
 library(parallel)
 library(data.table)
+#library(pbapply)
+library(pbmcapply)
 
 
 # Simulation constants
-iterations <- 5
+iterations <- 50
 nv <- 4
 rings <- c(4,4,4,4,4,4,4,4, 
            4,3,3,3,3,3,3,4, 
@@ -56,14 +58,21 @@ Parameters_list <- lapply(seq_along(Parameters_list), function(x) {
 
 # Start cores for parallelization
 ncores <- detectCores()
-cl <- makeCluster(ncores-1, type = "FORK")
+# cl <- makeCluster(ncores-1, type = "FORK")
 
 
 # Simulate trapping data
 # Then look at the trapping data by trap in two periods (day={1,2} and day={3,4})
-TrapData <- parLapply(cl, Parameters_list, function(x) {
+print("Simulating Trapping")
+# TrapData <- parLapply(cl, Parameters_list, function(x) {
 # TrapData <- lapply(Parameters_list, function(x) {
-  sim <- studySim(ts=x$TrapSpacing, fs=x$FieldSize, np=x$NumMice, delta=x$CatchRadius, nv=nv, d=x$Density)
+# TrapData <- pblapply(X = Parameters_list, cl = cl, FUN = function(x) {
+TrapData <- pbmclapply(Parameters_list, mc.cores = ncores-1, FUN = function(x) {
+  sim <- trapSim1(ts=x$TrapSpacing, fs=x$FieldSize, np=x$NumMice, delta=x$CatchRadius, nv=nv)
+  sim <- as.data.frame(sim)
+  names(sim) <- c("trap", "day")
+  sim$trap <- sim$trap+1
+  sim$day <- sim$day+1
   out <- data.frame(period1 = unlist(lapply(1:64, function(y) sum(sim$trap[sim$day <= 2] == y))),
                     period2 = unlist(lapply(1:64, function(y) sum(sim$trap[sim$day >= 3] == y))),
                     ring = rings)
@@ -74,8 +83,10 @@ TrapData <- parLapply(cl, Parameters_list, function(x) {
 
 
 # Analyze trapping data
-Stats <- parLapply(cl, TrapData, function(x) {
+print("Calculating Statistics")
+# Stats <- parLapply(cl, TrapData, function(x) {
 # Stats <- lapply(TrapData, function(x) {
+Stats <- pblapply(TrapData, cl = cl, function(x) {
   ts <- Parameters$TrapSpacing[Parameters$paramset == x$paramset[1]]
   
   aHat <- 1:4 #ring numbers
