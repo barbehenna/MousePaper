@@ -4,6 +4,7 @@
 // it ahead of time and see large speed-ups, becuase c++ is faster than R.
 
 #include <Rcpp.h>
+#include <math.h>
 using namespace Rcpp;
 
 // returns a random double according to the uniform distribution on [0,1]
@@ -19,8 +20,8 @@ using namespace Rcpp;
 //   return(dist(gen));
 // }
 
+
 // Assume that no mouse during a visit can be caught by multiple traps
-// [[Rcpp::export]]
 NumericVector Traps(NumericMatrix trapCoords, NumericMatrix visits, int low, int nv, double delta){
   double dx, dy;
   bool caught = false;
@@ -52,15 +53,14 @@ NumericVector Traps(NumericMatrix trapCoords, NumericMatrix visits, int low, int
   return mouse;
 }
 
-// [[Rcpp::export]]
-NumericMatrix rngCpp(const int N) {
-  NumericMatrix X(N, 4);
-  X(_, 0) = runif(N);
-  X(_, 1) = rnorm(N);
-  X(_, 2) = rt(N, 5);
-  X(_, 3) = rbeta(N, 1, 1);
-  return X;
-}
+// NumericMatrix rngCpp(const int N) {
+//   NumericMatrix X(N, 4);
+//   X(_, 0) = runif(N);
+//   X(_, 1) = rnorm(N);
+//   X(_, 2) = rt(N, 5);
+//   X(_, 3) = rbeta(N, 1, 1);
+//   return X;
+// }
 
 // [[Rcpp::export]]
 NumericMatrix trapSim1(double ts, double fs, double np, double delta, int nv) {
