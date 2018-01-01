@@ -15,7 +15,7 @@ library(pbmcapply)
 
 
 # Simulation constants
-iterations <- 50
+iterations <- 1000
 nv <- 4
 rings <- c(4,4,4,4,4,4,4,4, 
            4,3,3,3,3,3,3,4, 
@@ -35,7 +35,7 @@ Boarder <- seq(from = 3, to = 6, by = 1)
 Density <- seq(from = 0.5, to = 2, by = 0.5)
 Parameters <- expand.grid(Density, Boarder, CatchRadius, TrapSpacing)
 names(Parameters) <- c("Density", "Boarder", "CatchRadius", "TrapSpacing")
-Parameters$FieldSize <- 7*Parameters$TrapSpacing + Parameters$Boarder
+Parameters$FieldSize <- 7*Parameters$TrapSpacing + 2*Parameters$Boarder
 Parameters$NumMice <- as.integer(Parameters$Density*Parameters$FieldSize*Parameters$FieldSize)
 
 remove_rows <- which(Parameters$CatchRadius > Parameters$TrapSpacing/2) # Not viable
@@ -43,12 +43,16 @@ Parameters <- Parameters[-remove_rows,]
 
 Parameters$paramset <- 1:nrow(Parameters) # Label each set of parameters for later reference
 
-Parameters_list <- split(Parameters, seq(nrow(Parameters)))# Split dataframe by row -> lapply across list
-Parameters_list <- rep(Parameters_list, times = iterations)
-Parameters_list <- lapply(seq_along(Parameters_list), function(x) {
-  cbind(Parameters_list[[x]], "UniqueID" = x)
-})
+# Parameters_list <- split(Parameters, seq(nrow(Parameters)))# Split dataframe by row -> lapply across list
+# Parameters_list <- rep(Parameters_list, times = iterations)
+# Parameters_list <- lapply(seq_along(Parameters_list), function(x) {
+#   cbind(Parameters_list[[x]], "UniqueID" = x)
+# })
 
+Parameters_mat <- as.matrix(Parameters)
+Parameters_mat <- replicate(iterations, Parameters_mat, simplify = FALSE)
+Parameters_mat <- do.call(rbind, Parameters_mat)
+Parameters_mat <- cbind(Parameters_mat, UniqueID=1:nrow(Parameters_mat))
 
 ###############
 # For testing
