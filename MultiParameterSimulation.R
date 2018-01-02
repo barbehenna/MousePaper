@@ -74,7 +74,7 @@ print("Simulating Trapping")
 # TrapData <- parLapply(cl, Parameters_list, function(x) {
 # TrapData <- lapply(Parameters_list, function(x) {
 # TrapData <- pblapply(X = Parameters_list, cl = cl, FUN = function(x) {
-TrapData <- pbmclapply(Parameters_list, mc.cores = ncores-1, mc.style = "txt", FUN = function(x) {
+TrapData <- pbmclapply(Parameters_list, mc.cores = ncores-1, mc.style = "ETA", FUN = function(x) {
   # sim <- trapSim1(ts=x$TrapSpacing, fs=x$FieldSize, np=x$NumMice, delta=x$CatchRadius, nv=nv)
   sim <- trapSim1(ts=x[4], fs=x[5], np=x[6], delta=x[3], nv=nv)
   sim <- as.data.frame(sim)
