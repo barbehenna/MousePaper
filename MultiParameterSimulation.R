@@ -12,6 +12,8 @@ library(parallel)
 library(data.table)
 #library(pbapply)
 library(pbmcapply)
+library(Rcpp)
+Rcpp::sourceCpp(paste0(getwd(), "/SimulationBackend.cpp"))
 
 
 # Simulation constants
@@ -53,6 +55,7 @@ Parameters_mat <- as.matrix(Parameters)
 Parameters_mat <- replicate(iterations, Parameters_mat, simplify = FALSE)
 Parameters_mat <- do.call(rbind, Parameters_mat)
 Parameters_mat <- cbind(Parameters_mat, UniqueID=1:nrow(Parameters_mat))
+Parameters_list <- split(Parameters_mat, Parameters_mat[,8]) # Split on UniqueID value
 
 ###############
 # For testing
@@ -72,7 +75,8 @@ print("Simulating Trapping")
 # TrapData <- lapply(Parameters_list, function(x) {
 # TrapData <- pblapply(X = Parameters_list, cl = cl, FUN = function(x) {
 TrapData <- pbmclapply(Parameters_list, mc.cores = ncores-1, FUN = function(x) {
-  sim <- trapSim1(ts=x$TrapSpacing, fs=x$FieldSize, np=x$NumMice, delta=x$CatchRadius, nv=nv)
+  # sim <- trapSim1(ts=x$TrapSpacing, fs=x$FieldSize, np=x$NumMice, delta=x$CatchRadius, nv=nv)
+  sim <- trapSim1(ts=x[4], fs=x[5], np=x[6], delta=x[3], nv=nv)
   sim <- as.data.frame(sim)
   names(sim) <- c("trap", "day")
   sim$trap <- sim$trap+1
@@ -80,8 +84,8 @@ TrapData <- pbmclapply(Parameters_list, mc.cores = ncores-1, FUN = function(x) {
   out <- data.frame(period1 = unlist(lapply(1:64, function(y) sum(sim$trap[sim$day <= 2] == y))),
                     period2 = unlist(lapply(1:64, function(y) sum(sim$trap[sim$day >= 3] == y))),
                     ring = rings)
-  out$paramset <- x$paramset
-  out$UniqueID <- x$UniqueID
+  out$paramset <- x[7]
+  out$UniqueID <- x[8]
   return(out)
 })
 
