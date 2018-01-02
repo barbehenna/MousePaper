@@ -10,14 +10,14 @@
 # Libraries
 library(parallel)
 library(data.table)
-#library(pbapply)
-library(pbmcapply)
+library(pbapply) # not sure about rng reliability
+library(pbmcapply) #pretty sure it handles rng well
 library(Rcpp)
 Rcpp::sourceCpp(paste0(getwd(), "/SimulationBackend.cpp"))
 
 
 # Simulation constants
-iterations <- 1000
+iterations <- 100
 nv <- 4
 rings <- c(4,4,4,4,4,4,4,4, 
            4,3,3,3,3,3,3,4, 
@@ -74,15 +74,16 @@ print("Simulating Trapping")
 # TrapData <- parLapply(cl, Parameters_list, function(x) {
 # TrapData <- lapply(Parameters_list, function(x) {
 # TrapData <- pblapply(X = Parameters_list, cl = cl, FUN = function(x) {
-TrapData <- pbmclapply(Parameters_list, mc.cores = ncores-1, FUN = function(x) {
+TrapData <- pbmclapply(Parameters_list, mc.cores = ncores-1, mc.style = "txt", FUN = function(x) {
   # sim <- trapSim1(ts=x$TrapSpacing, fs=x$FieldSize, np=x$NumMice, delta=x$CatchRadius, nv=nv)
   sim <- trapSim1(ts=x[4], fs=x[5], np=x[6], delta=x[3], nv=nv)
   sim <- as.data.frame(sim)
   names(sim) <- c("trap", "day")
   sim$trap <- sim$trap+1
   sim$day <- sim$day+1
-  out <- data.frame(period1 = unlist(lapply(1:64, function(y) sum(sim$trap[sim$day <= 2] == y))),
-                    period2 = unlist(lapply(1:64, function(y) sum(sim$trap[sim$day >= 3] == y))),
+  sim <- na.omit(sim)
+  out <- data.frame(period1 = unlist(lapply(seq(64), function(y) sum(sim$trap[sim$day <= 2] == y))),
+                    period2 = unlist(lapply(seq(64), function(y) sum(sim$trap[sim$day >= 3] == y))),
                     ring = rings)
   out$paramset <- x[7]
   out$UniqueID <- x[8]
