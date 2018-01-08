@@ -65,7 +65,7 @@ Parameters_list <- split(Parameters_mat, Parameters_mat[,8]) # Split on UniqueID
 
 # Start cores for parallelization
 ncores <- detectCores()
-# cl <- makeCluster(ncores-1, type = "FORK")
+cl <- makeCluster(ncores-1, type = "FORK")
 
 
 # Simulate trapping data
@@ -119,7 +119,7 @@ Stats <- pblapply(TrapData, cl = cl, function(x) {
   pHatDropNeg[which(pHat < 0)] <- 0 # NA<0 returns NA and the which only returns TRUE locations
   
   # Save the data
-  out <- data.frame(nHat, dHat, pHat, pHatDropNeg, pHatZeroNeg, aHat)
+  out <- data.frame(nHat, dHat, pHat, pHatDropNeg, pHatZeroNeg, aHat, square=squares)
   out$paramset <- x$paramset[1]
   out$UniqueID <- x$UniqueID[1]
   return(out)
