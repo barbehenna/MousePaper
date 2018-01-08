@@ -8,8 +8,10 @@
 library(data.table)
 library(ggplot2)
 
-Sim <- read.csv("data/20171228_220149_Stats.csv", header = TRUE, row.names = NULL)
+Sim <- read.csv("data/20180103_211025_Stats.csv", header = TRUE, row.names = NULL)
+Parameters <- read.csv("data/20180103_211025_Parameters.csv", header = TRUE, row.names = NULL)
 
+# Sim <- merge(Sim, Parameters, by = "paramset")
 
 # Aggregate the statistics with the same parameters
 # I chose median at this point because of it's robustness
@@ -33,9 +35,11 @@ AggStats <- Sim[, .(med_dHat = median(na.omit(dHat)),
                     med_pHatDropNeg = median(na.omit(pHatDropNeg)),
                     avg_pHatDropNeg = mean(na.omit(pHatDropNeg)),
                     std_pHatDropNeg = sd(na.omit(pHatDropNeg)),
-                    med_aHat = median(na.omit(aHat))), 
-                by = .(square, TrapSpacing, FieldSize, CatchRadius, density)]
+                    med_aHat = median(na.omit(aHat))),
+                # by = .(square, TrapSpacing, FieldSize, CatchRadius, Density)]
+                by = .(paramset)]
 
+AggStats <- merge(AggStats, Parameters, by = "paramset")
 
 # Want to understand what values affect the estimate of density
 model <- lm(avg_dHat ~ square + TrapSpacing + FieldSize + CatchRadius + density, data = AggStats)
