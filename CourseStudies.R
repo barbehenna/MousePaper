@@ -37,23 +37,23 @@ AggStats <- Sim[, .(med_dHat = median(na.omit(dHat)),
                     std_pHatDropNeg = sd(na.omit(pHatDropNeg)),
                     med_aHat = median(na.omit(aHat))),
                 # by = .(square, TrapSpacing, FieldSize, CatchRadius, Density)]
-                by = .(paramset)]
+                by = .(paramset, square)]
 
 AggStats <- merge(AggStats, Parameters, by = "paramset")
 
 # Want to understand what values affect the estimate of density
-model <- lm(avg_dHat ~ square + TrapSpacing + FieldSize + CatchRadius + density, data = AggStats)
+model <- lm(avg_dHat ~ square + TrapSpacing + FieldSize + CatchRadius + Density, data = AggStats)
 summary(model)
 
 # Looks like we can ignore the effects of Trap Spacing and Catch Radius on our density estimation
-model <- lm(avg_dHat ~ square + CatchRadius + density, data = AggStats)
+model <- lm(avg_dHat ~ square + CatchRadius + Density, data = AggStats)
 summary(model)
 
 # Look at the correlation between density and dHat, colored by ring/square
 p <- ggplot(data = AggStats) + geom_boxplot(mapping = aes(x = factor(density), y = med_dHat))
 p
-cor.test(x = AggStats$density, y = AggStats$med_dHat, method = "pearson")
-cor.test(x = AggStats$density, y = AggStats$med_dHat, method = "kendall")
+cor.test(x = AggStats$Density, y = AggStats$med_dHat, method = "pearson")
+cor.test(x = AggStats$Density, y = AggStats$med_dHat, method = "kendall")
 
 # So they appear to be correlated but look systematically biased
 # We can see this by looking at the peaks in the density plots
@@ -70,6 +70,116 @@ p
 
 p <- ggplot(data = AggStats[AggStats$square < 2]) + geom_density(mapping = aes(med_dHat, colour = factor(CatchRadius)))
 p
+
+
+
+
+
+
+##################################################################################
+# Is the distribution of densitiy estimates normal for each ring?
+##################################################################################
+
+# If we're looking at our simulations by parameter set, the only possible thing they 
+# very on (within a paramset) is the square. It looks like square 1 is a large reason 
+# why the distribution of dHat not normal. 
+# Regardless, our data does not look normally distributed.
+
+for (i in sample(seq(336), 10)) {
+  qqnorm(Sim$dHat[Sim$paramset == i], main = paste("paramset =", i))
+  qqline(Sim$dHat[Sim$paramset == i])
+  p <- ggplot(Sim[Sim$paramset == i]) + geom_point(stat = "qq", aes(sample = dHat, colour = factor(square)))
+  plot(p)
+}
+
+# Check for parallelism in qqlines of squares 2 and 3 <==> do they have the same distribution?
+
+
+##################################################################################
+# Are the density estimates consistently wrong?
+##################################################################################
+
+
+median(Sim$dHat[Sim$paramset == 126 & Sim$square <= 3], na.rm = TRUE)
+# Is this always true? No.
+error <- NULL
+# This foor loop can easily be done using vector arithmatic
+for (i in seq(length(unique(Sim$UniqueID)))) {
+  med <- median(Sim$dHat[Sim$UniqueID == i & Sim$square <= 3], na.rm = TRUE)
+  den <- Sim$Density[Sim$UniqueID == i][1] #should only be one value
+  error <- rbind(error, c(den, med/den, med-den))
+}
+error <- as.data.frame(error)
+names(error) <- c("den", "perc", "abs")
+
+ggplot(error[abs(error$abs) < 1,]) + geom_density(aes(x = abs, colour = factor(den)))
+ggplot(error[abs(1 - error$perc) < 1,]) + geom_density(aes(x = perc, colour = factor(den)))
+
+
+comb <- gtools::combinations(n = length(unique(error$den)), r = 2, v = unique(error$den))
+pval <- NULL
+for (i in seq(NROW(comb))) {
+  test <- ks.test(x = error$perc[error$den == comb[i,1]], y = error$perc[error$den == comb[i,2]])
+  pval <- c(pval, test$p.value)
+}
+print(min(pval)) 
+#So the distributions of the percent error in the density estimates 
+#seem to come from the same distribution regardless of the true density
+
+mean(error$perc, na.rm = TRUE) #mean error of density estimates
+median(error$perc, na.rm = TRUE) #different from mean implies a skewed distribution? Or just a small sample? (Or something else?)
+
+#MAYBE?? THEY WERE THE SAME DISTRIBUTION BEFORE THE SAMPLE SIZE INCREASED, BUT NOW THEY'RE NOT
+#THEY LOOK BASICALLY THE SAME. (MAYBE THE SAMPLE IS TOO LARGE?)
+
+
+# Let's try bootstrapping the pvalues (I think I'm doing this correctly)
+# use suppressWarnings(expr) if there are a lot of warnings related to ties
+bootstrap_pval <- gtools::combinations(n = length(unique(error$den)), r = 2, v = unique(error$den))
+dimnames(bootstrap_pval)[[2]] <- list("dens1", "dens2")
+pval <- pblapply(seq(nrow(comb)), function (x) {
+  print(bootstrap_pval[x,])
+  unlist(pblapply(seq(100000), function(y) {
+    ks.test(x = sample(error$perc[error$den == bootstrap_pval[x,1]], 50), 
+            y = sample(error$perc[error$den == bootstrap_pval[x,2]], 50), 
+            exact = TRUE)$p.value
+  }))
+})
+
+low_95 <- lapply(pval, function(x) {
+  sort(x)[floor(0.025 * length(x))]
+})
+bootstrap_pval <- cbind(bootstrap_pval, low_95=unlist(low_95))
+
+high_95 <- lapply(pval, function(x) {
+  sort(x)[floor(0.975 * length(x))]
+})
+bootstrap_pval <- cbind(bootstrap_pval, high_95=unlist(high_95))
+
+guess <- lapply(pval, function(x) {
+  median(x, na.rm = FALSE)
+})
+bootstrap_pval <- cbind(bootstrap_pval, guess=unlist(guess))
+
+# So it seems like we can't diffinatively say that the distributions of the errors are different or not, but it seems like they're the same
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
