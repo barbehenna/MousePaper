@@ -145,21 +145,28 @@ pval <- pblapply(seq(nrow(comb)), function (x) {
   }))
 })
 
+# Calculate the lower bound for a 95% CI
 low_95 <- lapply(pval, function(x) {
   sort(x)[floor(0.025 * length(x))]
 })
 bootstrap_pval <- cbind(bootstrap_pval, low_95=unlist(low_95))
 
+# Calculate the upper bound for a 95% CI
 high_95 <- lapply(pval, function(x) {
   sort(x)[floor(0.975 * length(x))]
 })
 bootstrap_pval <- cbind(bootstrap_pval, high_95=unlist(high_95))
 
+# Estimate the value of the parameter
 guess <- lapply(pval, function(x) {
   median(x, na.rm = FALSE)
 })
 bootstrap_pval <- cbind(bootstrap_pval, guess=unlist(guess))
 
+# Probability of rejecting the NULL with the Kolmogorov-Smirnov Test (alpha = 0.05)
+# the complement of this value is the probability that we conclude that the two percent 
+# error distributions are coming from the same distributions, i.e. our method is density invarient 
+# This allows us to figure out a constant to multiply our density estimate by to derive the true value.
 p_reject <- lapply(pval, function(x) {
   sum(x < 0.05)/length(x)
 })
