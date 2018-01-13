@@ -138,10 +138,9 @@ median(error$perc, na.rm = TRUE) #different from mean implies a skewed distribut
 bootstrap_pval <- gtools::combinations(n = length(unique(error$den)), r = 2, v = unique(error$den))
 dimnames(bootstrap_pval)[[2]] <- list("dens1", "dens2")
 pval <- pblapply(seq(nrow(comb)), function (x) {
-  print(bootstrap_pval[x,])
   unlist(pblapply(seq(100000), function(y) {
-    ks.test(x = sample(error$perc[error$den == bootstrap_pval[x,1]], 50), 
-            y = sample(error$perc[error$den == bootstrap_pval[x,2]], 50), 
+    ks.test(x = sample(error$perc[error$den == bootstrap_pval[x,1]], 100), 
+            y = sample(error$perc[error$den == bootstrap_pval[x,2]], 100), 
             exact = TRUE)$p.value
   }))
 })
@@ -161,7 +160,13 @@ guess <- lapply(pval, function(x) {
 })
 bootstrap_pval <- cbind(bootstrap_pval, guess=unlist(guess))
 
-# So it seems like we can't diffinatively say that the distributions of the errors are different or not, but it seems like they're the same
+p_reject <- lapply(pval, function(x) {
+  sum(x < 0.05)/length(x)
+})
+bootstrap_pval <- cbind(bootstrap_pval, p_reject=unlist(p_reject))
+
+# So it seems like we can't diffinatively say that the distributions of 
+# the errors are different or not, but it seems like they're the same
 
 
 
