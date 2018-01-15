@@ -7,6 +7,8 @@
 
 library(data.table)
 library(ggplot2)
+library(pbapply)
+library(parallel)
 
 Sim <- read.csv("data/20180115_185702_Stats.csv", header = TRUE, row.names = NULL)
 Parameters <- read.csv("data/20180115_185702_Parameters.csv", header = TRUE, row.names = NULL)
@@ -225,7 +227,10 @@ ggplot(Sim) + geom_density(aes(x = dHat, colour = factor(Density)))
 # Which ones yield better results?
 ##################################################################################
 
-error <- lapply(unique(Sim$UniqueID), function(x) {
+ncores <- detectCores()
+cl <- makeCluster(ncores-1, type = "FORK")
+
+error <- pblapply(unique(Sim$UniqueID), cl = cl, function(x) {
   avg <- mean(Sim$dHat[Sim$UniqueID == x & Sim$square <= 3], na.rm = TRUE)
   den <- Sim$Density[Sim$UniqueID == x][1]
   ts <- Sim$TrapSpacing[Sim$UniqueID == x][1]
@@ -233,23 +238,12 @@ error <- lapply(unique(Sim$UniqueID), function(x) {
   tmp <- data.frame(den, avg-den, avg/den, ts, cr)
   return(tmp)
 })
+
+stopCluster(cl)
 error <- rbindlist(error)
 names(error) <- c("den", "abs", "perc", "TrapSpacing", "CatchRadius")
 
-ggplot(data = error[error$CatchRadius == 0.5]) + geom_density(aes(x = perc, colour = factor(TrapSpacing)))
-
-
-
-
-
-
-
-
-
-
-
-
-
+ggplot(data = error[error$CatchRadius == 0.5]) + geom_density(aes(x = perc, colour = factor(TrapSpacing))) + xlim(-1,3)
 
 
 
