@@ -17,7 +17,7 @@ Rcpp::sourceCpp(paste0(getwd(), "/SimulationBackend.cpp"))
 
 
 # Simulation constants
-iterations <- 100
+iterations <- 1000
 nv <- 4
 rings <- c(4,4,4,4,4,4,4,4, 
            4,3,3,3,3,3,3,4, 
@@ -119,7 +119,7 @@ Stats <- pblapply(TrapData, cl = cl, function(x) {
   pHatDropNeg[which(pHat < 0)] <- 0 # NA<0 returns NA and the which only returns TRUE locations
   
   # Save the data
-  out <- data.frame(nHat, dHat, pHat, pHatDropNeg, pHatZeroNeg, aHat, square=squares)
+  out <- data.frame(nHat, dHat, pHat, pHatDropNeg, pHatZeroNeg, aHat, square=seq(5))
   out$paramset <- x$paramset[1]
   out$UniqueID <- x$UniqueID[1]
   return(out)
