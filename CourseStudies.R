@@ -8,8 +8,8 @@
 library(data.table)
 library(ggplot2)
 
-Sim <- read.csv("data/20180103_211025_Stats.csv", header = TRUE, row.names = NULL)
-Parameters <- read.csv("data/20180103_211025_Parameters.csv", header = TRUE, row.names = NULL)
+Sim <- read.csv("data/20180115_185702_Stats.csv", header = TRUE, row.names = NULL)
+Parameters <- read.csv("data/20180115_185702_Parameters.csv", header = TRUE, row.names = NULL)
 
 Sim <- merge(Sim, Parameters, by = "paramset")
 
@@ -116,6 +116,7 @@ error <- lapply(unique(Sim$UniqueID), function(x){
   avg <- mean(Sim$dHat[Sim$UniqueID == x & Sim$square <= 3], na.rm = TRUE)
   den <- Sim$Density[Sim$UniqueID == i][1]
   tmp <- data.frame(den, med/den, med-den)
+  return(tmp)
 })
 error <- rbindlist(error)
 names(error) <- c("den", "perc", "abs")
@@ -218,9 +219,24 @@ names(error) <- c("den", "perc", "abs")
 ggplot(Sim) + geom_density(aes(x = dHat, colour = factor(Density)))
 
 
+##################################################################################
+# BY trap spacing AND Catch Radius (for a fixed catch radius), 
+# what is the distribution of error in density estimates? 
+# Which ones yield better results?
+##################################################################################
 
+error <- lapply(unique(Sim$UniqueID), function(x) {
+  avg <- mean(Sim$dHat[Sim$UniqueID == x & Sim$square <= 3], na.rm = TRUE)
+  den <- Sim$Density[Sim$UniqueID == x][1]
+  ts <- Sim$TrapSpacing[Sim$UniqueID == x][1]
+  cr <- Sim$CatchRadius[Sim$UniqueID == x][1]
+  tmp <- data.frame(den, avg-den, avg/den, ts, cr)
+  return(tmp)
+})
+error <- rbindlist(error)
+names(error) <- c("den", "abs", "perc", "TrapSpacing", "CatchRadius")
 
-
+ggplot(data = error[error$CatchRadius == 0.5]) + geom_density(aes(x = perc, colour = factor(TrapSpacing)))
 
 
 
