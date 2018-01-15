@@ -11,7 +11,7 @@ library(ggplot2)
 Sim <- read.csv("data/20180103_211025_Stats.csv", header = TRUE, row.names = NULL)
 Parameters <- read.csv("data/20180103_211025_Parameters.csv", header = TRUE, row.names = NULL)
 
-# Sim <- merge(Sim, Parameters, by = "paramset")
+Sim <- merge(Sim, Parameters, by = "paramset")
 
 # Aggregate the statistics with the same parameters
 # I chose median at this point because of it's robustness
@@ -102,15 +102,24 @@ for (i in sample(seq(336), 10)) {
 
 median(Sim$dHat[Sim$paramset == 126 & Sim$square <= 3], na.rm = TRUE)
 # Is this always true? No.
-error <- NULL
-# This foor loop can easily be done using vector arithmatic
-for (i in seq(length(unique(Sim$UniqueID)))) {
-  med <- median(Sim$dHat[Sim$UniqueID == i & Sim$square <= 3], na.rm = TRUE)
-  den <- Sim$Density[Sim$UniqueID == i][1] #should only be one value
-  error <- rbind(error, c(den, med/den, med-den))
-}
-error <- as.data.frame(error)
+# error <- NULL
+# # This foor loop can easily be done using vector arithmatic
+# for (i in unique(Sim$UniqueID)) {
+#   med <- median(Sim$dHat[Sim$UniqueID == i & Sim$square <= 3], na.rm = TRUE)
+#   den <- Sim$Density[Sim$UniqueID == i][1] #should only be one value
+#   error <- rbind(error, c(den, med/den, med-den))
+# }
+# error <- as.data.frame(error)
+# names(error) <- c("den", "perc", "abs")
+
+error <- lapply(unique(Sim$UniqueID), function(x){
+  avg <- mean(Sim$dHat[Sim$UniqueID == x & Sim$square <= 3], na.rm = TRUE)
+  den <- Sim$Density[Sim$UniqueID == i][1]
+  tmp <- data.frame(den, med/den, med-den)
+})
+error <- rbindlist(error)
 names(error) <- c("den", "perc", "abs")
+
 
 ggplot(error[abs(error$abs) < 1,]) + geom_density(aes(x = abs, colour = factor(den)))
 ggplot(error[abs(1 - error$perc) < 1,]) + geom_density(aes(x = perc, colour = factor(den)))
@@ -176,12 +185,37 @@ bootstrap_pval <- cbind(bootstrap_pval, p_reject=unlist(p_reject))
 # the errors are different or not, but it seems like they're the same
 
 
+##################################################################################
+# Visualize metrics
+##################################################################################
+
+mode_alton <- function(x) {
+  d <- density(x, na.rm=TRUE)
+  return(d$x[which(d$y == max(d$y))])
+}
+
+plot(density(error$perc, na.rm = TRUE), xlim = c(-1, 3))
+abline(v = median(error$perc, na.rm = TRUE), col = "red")
+abline(v = mean(error$perc, na.rm = TRUE), col = "green")
+abline(v = mode_alton(error$perc), col = "blue")
 
 
+##################################################################################
+# Is our measure of density "tight" and normal for a specific trap spacing?
+##################################################################################
+
+Sim <- Sim[TrapSpacing == 1.0] # Pretty sure this trap spacing is known to work well
+
+for (i in unique(Sim$UniqueID)) {
+  med <- median(Sim$dHat[Sim$UniqueID == i & Sim$square <= 3], na.rm = TRUE)
+  den <- Sim$Density[Sim$UniqueID == i][1] #should only be one value
+  error <- rbind(error, c(den, med/den, med-den))
+}
+error <- as.data.frame(error)
+names(error) <- c("den", "perc", "abs")
 
 
-
-
+ggplot(Sim) + geom_density(aes(x = dHat, colour = factor(Density)))
 
 
 
