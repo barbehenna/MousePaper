@@ -246,4 +246,14 @@ names(error) <- c("den", "abs", "perc", "TrapSpacing", "CatchRadius")
 ggplot(data = error[error$CatchRadius == 0.5]) + geom_density(aes(x = perc, colour = factor(TrapSpacing))) + xlim(-1,3)
 
 
+# Attempt one at bi-variate analysis
+error<-data.table(error)
+error_proc <- error[, .(perc = mean(perc)), by = .(TrapSpacing, CatchRadius)]
+ggplot(data = error_proc, mapping = aes(x = TrapSpacing, y = CatchRadius))+geom_point(aes(colour = perc))
+
+# Looks like the predictions get better as the catch radius increases
+tmp <- error[error$TrapSpacing == 6,]
+ggplot(data = tmp) + geom_density(mapping = aes(x = perc, colour = factor(CatchRadius))) + xlim(-1,3)
+
+
 
