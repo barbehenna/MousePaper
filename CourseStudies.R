@@ -249,11 +249,33 @@ ggplot(data = error[error$CatchRadius == 0.5]) + geom_density(aes(x = perc, colo
 # Attempt one at bi-variate analysis
 error<-data.table(error)
 error_proc <- error[, .(perc = mean(perc)), by = .(TrapSpacing, CatchRadius)]
-ggplot(data = error_proc, mapping = aes(x = TrapSpacing, y = CatchRadius))+geom_point(aes(colour = perc))
+ggplot(data = error_proc, mapping = aes(x = TrapSpacing, y = CatchRadius))+geom_point(aes(colour = perc, size = 4))
 
 # Looks like the predictions get better as the catch radius increases
 tmp <- error[error$TrapSpacing == 6,]
 ggplot(data = tmp) + geom_density(mapping = aes(x = perc, colour = factor(CatchRadius))) + xlim(-1,3)
 
+
+# There's a MUCH cleaner way to do this
+pts <- expand.grid(sort(unique(error$TrapSpacing)), sort(unique(error$CatchRadius)))
+names(pts) <- c("TrapSpacing", "CatchRadius")
+pts$mean_perc <- 0.0
+pts$size <- 0.0
+for (i in seq(nrow(pts))) {
+  ts <- pts$TrapSpacing[i]
+  cr <- pts$CatchRadius[i]
+  avg <- mean(error$perc[error$TrapSpacing == ts & error$CatchRadius == cr], na.rm = TRUE)
+  pts$size[i] <- length(error$perc[error$TrapSpacing == ts & error$CatchRadius == cr]) #just for reference
+  if (is.finite(avg)) {
+    pts$mean_perc[i] <- avg
+  }
+}
+
+library(plotly)
+values <- matrix(data = pts$mean_perc, nrow = 6, ncol = 6, byrow = TRUE)
+x_vals <- sort(unique(pts$TrapSpacing))
+y_vals <- sort(unique(pts$CatchRadius))
+p <- plot_ly(x = x_vals, y = y_vals, z = values) %>% add_surface()
+p
 
 
