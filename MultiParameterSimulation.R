@@ -130,20 +130,6 @@ Stats <- pblapply(TrapData, cl = cl, function(x) {
 })
 
 
-print("Calculating Error in Density Estimates")
-# error <- pblapply(unique(Sim$UniqueID), cl = cl, function(x) {
-DensityError <- pblapply(unique(Sim$UniqueID), function(x) {
-  avg <- mean(Sim$dHat[Sim$UniqueID == x & Sim$square <= 3], na.rm = TRUE)
-  den <- Sim$Density[Sim$UniqueID == x][1]
-  ts <- Sim$TrapSpacing[Sim$UniqueID == x][1]
-  cr <- Sim$CatchRadius[Sim$UniqueID == x][1]
-  tmp <- data.frame(den, avg-den, avg/den, ts, cr)
-  return(tmp)
-})
-DensityError <- rbindlist(DensityError)
-names(DensityError) <- c("den", "abs", "perc", "TrapSpacing", "CatchRadius")
-
-
 Stats <- rbindlist(Stats)
 TrapData <- rbindlist(TrapData)
 
@@ -157,7 +143,6 @@ CompleteTime <- format(Sys.time(), format = "%Y%m%d_%H%M%S")
 
 write.csv(Stats, paste0("data/", CompleteTime, "_Stats.csv"), row.names = FALSE)
 write.csv(Parameters, paste0("data/", CompleteTime, "_Parameters.csv"), row.names = FALSE)
-write.csv(DensityError, paste0("data/", CompleteTime, "_DensityError.csv"), row.names = FALSE)
 write.csv(TrapData, paste0("data/", CompleteTime, "_TrapData.csv"), row.names = FALSE)
 
 
