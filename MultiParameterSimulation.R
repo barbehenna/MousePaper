@@ -16,7 +16,12 @@ library(Rcpp)
 Rcpp::sourceCpp(paste0(getwd(), "/SimulationBackend.cpp"))
 
 
+# Simulation start time
+SimulationTime <- Sys.time()
+print(paste("Starting Simulation at", SimulationTime))
+
 # Simulation constants
+ncores <- detectCores()
 iterations <- 1000
 nv <- 4
 rings <- c(4,4,4,4,4,4,4,4, 
@@ -60,16 +65,16 @@ Parameters_mat <- replicate(iterations, Parameters_mat, simplify = FALSE)
 Parameters_mat <- do.call(rbind, Parameters_mat)
 Parameters_mat <- cbind(Parameters_mat, UniqueID=1:nrow(Parameters_mat))
 Parameters_list <- split(Parameters_mat, Parameters_mat[,8]) # Split on UniqueID value
+rm(Parameters_mat)
 
 ###############
 # For testing
 ###############
-# Parameters_list <- Parameters_list[c(1:4, 334:339)]
+# Parameters_list <- Parameters_list[1:1000]
 
 
-# Start cores for parallelization
-ncores <- detectCores()
-cl <- makeCluster(ncores, type = "FORK")
+# Start cluster for parallelization
+# cl <- makeCluster(ncores, type = "FORK")
 
 
 # Simulate trapping data
@@ -94,6 +99,15 @@ TrapData <- pbmclapply(Parameters_list, mc.cores = ncores, mc.style = "ETA", FUN
   return(out)
 })
 
+# Free up memory
+rm(Parameters_list)
+
+# Stop cores
+# stopCluster(cl)
+# rm(cl)
+
+# Start Cluster
+cl <- makeCluster(ncores, type = "FORK")
 
 # Analyze trapping data
 print("Calculating Statistics")
@@ -129,21 +143,60 @@ Stats <- pblapply(TrapData, cl = cl, function(x) {
   return(out)
 })
 
+# Stop Cluster
+stopCluster(cl)
 
-Stats <- rbindlist(Stats)
+# Save data
 TrapData <- rbindlist(TrapData)
+write.csv(TrapData, paste0("data/", SimulationTime, "_TrapData.csv"), row.names = FALSE)
 
+# Free up memory
+rm(TrapData)
+rm(cl)
+
+
+# Build Simulation results dataframe
+# Then save Stats and Parameters
+Stats <- rbindlist(Stats)
+Sim <- merge(Stats, Parameters, by = "paramset")
+write.csv(Stats, paste0("data/", SimulationTime, "_Stats.csv"), row.names = FALSE)
+write.csv(Parameters, paste0("data/", SimulationTime, "_Parameters.csv"), row.names = FALSE)
+
+# Free up memory
+rm(Stats)
+rm(Parameters)
+
+
+# Start Clusters
+cl <- makeCluster(ncores, type = "FORK")
+
+
+# Generate the error in density estimates
+print("Calculating Errors")
+DensityError <- pblapply(unique(Sim$UniqueID), cl = cl, function(x) {
+  avg <- mean(Sim$dHat[Sim$UniqueID == x & Sim$square <= 3], na.rm = TRUE)
+  den <- Sim$Density[Sim$UniqueID == x][1]
+  ts <- Sim$TrapSpacing[Sim$UniqueID == x][1]
+  cr <- Sim$CatchRadius[Sim$UniqueID == x][1]
+  tmp <- data.frame(den, avg-den, avg/den, ts, cr)
+  return(tmp)
+})
+DensityError <- rbindlist(DensityError)
+names(DensityError) <- c("den", "abs", "perc", "TrapSpacing", "CatchRadius")
 
 # Stop clusters
 stopCluster(cl)
 
+# Free up memory
+rm(Sim)
+rm(cl)
 
-# Save data
-CompleteTime <- format(Sys.time(), format = "%Y%m%d_%H%M%S")
 
-write.csv(Stats, paste0("data/", CompleteTime, "_Stats.csv"), row.names = FALSE)
-write.csv(Parameters, paste0("data/", CompleteTime, "_Parameters.csv"), row.names = FALSE)
-write.csv(TrapData, paste0("data/", CompleteTime, "_TrapData.csv"), row.names = FALSE)
+# Save density error data
+write.csv(DensityError, paste0("data/", SimulationTime, "_DensityError.csv"), row.names = FALSE)
+rm(DensityError)
 
+# Print time to complete
+print(paste("Simulation complete at", Sys.time()))
 
 
