@@ -31,10 +31,14 @@ squares <- list(1, 1:2, 1:3, 1:4, 4) # List of the rings in each square
 
 
 # List of viable parameters combinations 
-TrapSpacing <- seq(from = 1, to = 6, by = 1)
-CatchRadius <- seq(from = 0.5, to = 4, by = 0.5)
+# TrapSpacing <- seq(from = 1, to = 6, by = 1)
+# CatchRadius <- seq(from = 0.5, to = 4, by = 0.5)
+# Boarder <- seq(from = 3, to = 6, by = 1)
+# Density <- seq(from = 0.5, to = 2, by = 0.5)
+TrapSpacing <- seq(from = 0.25, to = 6, by = 0.25)
+CatchRadius <- seq(from = 0.125, to = 3, by = 0.125)
 Boarder <- seq(from = 3, to = 6, by = 1)
-Density <- seq(from = 0.5, to = 2, by = 0.5)
+Density <- seq(from = 0.5, to = 2, by = 0.25)
 Parameters <- expand.grid(Density, Boarder, CatchRadius, TrapSpacing)
 names(Parameters) <- c("Density", "Boarder", "CatchRadius", "TrapSpacing")
 Parameters$FieldSize <- 7*Parameters$TrapSpacing + 2*Parameters$Boarder
@@ -125,6 +129,21 @@ Stats <- pblapply(TrapData, cl = cl, function(x) {
   return(out)
 })
 
+
+print("Calculating Error in Density Estimates")
+# error <- pblapply(unique(Sim$UniqueID), cl = cl, function(x) {
+DensityError <- pblapply(unique(Sim$UniqueID), function(x) {
+  avg <- mean(Sim$dHat[Sim$UniqueID == x & Sim$square <= 3], na.rm = TRUE)
+  den <- Sim$Density[Sim$UniqueID == x][1]
+  ts <- Sim$TrapSpacing[Sim$UniqueID == x][1]
+  cr <- Sim$CatchRadius[Sim$UniqueID == x][1]
+  tmp <- data.frame(den, avg-den, avg/den, ts, cr)
+  return(tmp)
+})
+DensityError <- rbindlist(DensityError)
+names(DensityError) <- c("den", "abs", "perc", "TrapSpacing", "CatchRadius")
+
+
 Stats <- rbindlist(Stats)
 TrapData <- rbindlist(TrapData)
 
@@ -138,6 +157,7 @@ CompleteTime <- format(Sys.time(), format = "%Y%m%d_%H%M%S")
 
 write.csv(Stats, paste0("data/", CompleteTime, "_Stats.csv"), row.names = FALSE)
 write.csv(Parameters, paste0("data/", CompleteTime, "_Parameters.csv"), row.names = FALSE)
+write.csv(DensityError, paste0("data/", CompleteTime, "_DensityError.csv"), row.names = FALSE)
 write.csv(TrapData, paste0("data/", CompleteTime, "_TrapData.csv"), row.names = FALSE)
 
 
