@@ -117,7 +117,7 @@ median(Sim$dHat[Sim$paramset == 126 & Sim$square <= 3], na.rm = TRUE)
 error <- lapply(unique(Sim$UniqueID), function(x){
   avg <- mean(Sim$dHat[Sim$UniqueID == x & Sim$square <= 3], na.rm = TRUE)
   den <- Sim$Density[Sim$UniqueID == i][1]
-  tmp <- data.frame(den, med/den, med-den)
+  tmp <- data.frame(den, avg/den, avg-den)
   return(tmp)
 })
 error <- rbindlist(error)
