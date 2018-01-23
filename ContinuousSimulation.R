@@ -33,7 +33,7 @@ print(paste("Starting Simulation at", SimulationTime))
 
 # Simulation Constants
 # ncores <- detectCores()
-iterations <- 50
+iterations <- 1000
 nv <- 4
 rings <- c(4,4,4,4,4,4,4,4, 
            4,3,3,3,3,3,3,4, 
@@ -63,7 +63,7 @@ for (iter in seq(iterations)) {
   Boarder <- runif(n = 1, min = BoarderMin, max = BoarderMax)
   Density <- runif(n = 1, min = DensityMin, max = DensityMax)
   FieldSize <- 7*TrapSpacing + 2*Boarder
-  NumMice <- FieldSize*FieldSize*Density
+  NumMice <- round(FieldSize*FieldSize*Density)
 
   ###### Run simulation ######
   sim <- trapSim1(ts=TrapSpacing, fs=FieldSize, np=NumMice, delta=CatchRadius, nv=nv)
