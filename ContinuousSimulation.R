@@ -33,7 +33,7 @@ print(paste("Starting Simulation at", SimulationTime))
 
 # Simulation Constants
 # ncores <- detectCores()
-iterations <- 1000
+iterations <- 10000
 nv <- 4
 rings <- c(4,4,4,4,4,4,4,4, 
            4,3,3,3,3,3,3,4, 
@@ -52,7 +52,7 @@ write.table(x = t(c("nHat", "dHat", "pHat", "pHatDropNeg", "pHatZeroNeg",
             file = paste0("data/", SimulationTime, "_Stats.csv"),
             sep = ",", row.names = FALSE, col.names = FALSE)
 write.table(x = t(c("Density", "Boarder", "CatchRadius", "TrapSpacing", 
-                    "FieldSize", "NumMice", "paramset")),
+                    "FieldSize", "NumMice", "UniqueID")),
             file = paste0("data/", SimulationTime, "_Parameters.csv"),
             sep = ",", row.names = FALSE, col.names = FALSE)
 for (iter in seq(iterations)) {
