@@ -46,7 +46,7 @@ Density <- seq(from = 0.5, to = 2, by = 0.25)
 Parameters <- expand.grid(Density, Boarder, CatchRadius, TrapSpacing)
 names(Parameters) <- c("Density", "Boarder", "CatchRadius", "TrapSpacing")
 Parameters$FieldSize <- 7*Parameters$TrapSpacing + 2*Parameters$Boarder
-Parameters$NumMice <- as.integer(Parameters$Density*Parameters$FieldSize*Parameters$FieldSize)
+Parameters$NumMice <- round(Parameters$Density*Parameters$FieldSize*Parameters$FieldSize)
 
 # Remove unviable rows
 remove_rows <- which(Parameters$CatchRadius > Parameters$TrapSpacing/2) # Not viable

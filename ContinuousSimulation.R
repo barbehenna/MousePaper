@@ -33,7 +33,7 @@ print(paste("Starting Simulation at", SimulationTime))
 
 # Simulation Constants
 # ncores <- detectCores()
-iterations <- 10000
+iterations <- 8400
 nv <- 4
 rings <- c(4,4,4,4,4,4,4,4, 
            4,3,3,3,3,3,3,4, 
@@ -56,7 +56,6 @@ write.table(x = t(c("Density", "Boarder", "CatchRadius", "TrapSpacing",
             file = paste0("data/", SimulationTime, "_Parameters.csv"),
             sep = ",", row.names = FALSE, col.names = FALSE)
 for (iter in seq(iterations)) {
-  print(iter)
   ###### Get parameters for simulation ######
   TrapSpacing <- runif(n = 1, min = TrapSpacingMin, max = TrapSpacingMax)
   CatchRadius <- runif(n = 1, min = CatchRadiusMin, max = TrapSpacing/2)
