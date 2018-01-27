@@ -19,7 +19,7 @@ Rcpp::sourceCpp(paste0(getwd(), "/SimulationBackend.cpp"))
 
 # Simulation Start Time
 SimulationTime <- Sys.time()
-print(paste("Starting Simulation at", SimulationTime))
+#print(paste("Starting Simulation at", SimulationTime))
 
 # Simulation Constants
 # ncores <- detectCores()
@@ -122,3 +122,4 @@ for (param in seq(N)) {
   }
 }
 
+print(paste("Time Elapsed =", Sys.time()-SimulationTime))

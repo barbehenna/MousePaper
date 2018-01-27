@@ -29,11 +29,11 @@ DensityMax <- 2
 
 # Simulation Start Time
 SimulationTime <- Sys.time()
-print(paste("Starting Simulation at", SimulationTime))
+#print(paste("Starting Simulation at", SimulationTime))
 
 # Simulation Constants
 # ncores <- detectCores()
-iterations <- 8400
+iterations <- 10000000
 nv <- 4
 rings <- c(4,4,4,4,4,4,4,4, 
            4,3,3,3,3,3,3,4, 
@@ -114,3 +114,4 @@ for (iter in seq(iterations)) {
               sep = ",", row.names = FALSE, col.names = FALSE, append = TRUE)
 }
 
+print(paste("Time Elapsed =", Sys.time()-SimulationTime))
