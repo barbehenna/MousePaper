@@ -16,7 +16,7 @@ Sim <- read.csv("data/2018-01-27 00:13:19_Stats.csv", header = TRUE, row.names =
 Parameters <- read.csv("data/2018-01-27 00:13:19_Parameters.csv", header = TRUE, row.names = NULL)
 
 Sim <- merge(Sim, Parameters, by = "paramset")
-
+rm(Parameters)
 
 # ncores <- detectCores()
 # cl <- makeCluster(ncores-1, type = "FORK")
@@ -34,7 +34,6 @@ error <- pblapply(unique(Sim$UniqueID), function(x) {
 # stopCluster(cl)
 error <- rbindlist(error)
 names(error) <- c("den", "perc", "TrapSpacing", "CatchRadius")
-
 
 
 # ggplot(data = error[error$CatchRadius == 0.5]) + geom_density(aes(x = perc, colour = factor(TrapSpacing))) + xlim(-1,3)
@@ -66,10 +65,8 @@ names(error) <- c("den", "perc", "TrapSpacing", "CatchRadius")
 #   }
 # }
 
-values <- matrix(data = pts$mean_perc, nrow = 6, ncol = 6, byrow = TRUE)
-x_vals <- sort(unique(pts$TrapSpacing))
-y_vals <- sort(unique(pts$CatchRadius))
-p <- plot_ly(x = x_vals, y = y_vals, z = values) %>% add_surface()
+
+p <- plot_ly(x = error$TrapSpacing, y = error$CatchRadius, z = error$perc) %>% add_surface()
 saveWidget(p, file = "perc_vs_ts_cr.html")
 
 
