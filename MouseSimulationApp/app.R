@@ -10,7 +10,7 @@
 library(shiny)
 library(raster)
 library(Rcpp)
-sourceCpp(paste0(getwd(),'/../SimulationBackend.cpp'))
+sourceCpp(paste0(getwd(),'/SimulationBackend.cpp'))
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
