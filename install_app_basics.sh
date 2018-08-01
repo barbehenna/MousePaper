@@ -18,8 +18,8 @@ if [ -z "${r}" -o -z "${R}" ]; then
 fi
 
 echo "Installing R packages.\n"
-R -e 'if(!require(shiny)){install.packages("shiny")}'
-R -e 'if(!require(raster)){install.packages("raster")}'
-R -e 'if(!require(Rcpp)){install.packages("Rcpp")}'
+R -e 'if(!require(shiny)){install.packages("shiny", repos="http://cran.us.r-project.org")}'
+R -e 'if(!require(raster)){install.packages("raster", repos="http://cran.us.r-project.org")}'
+R -e 'if(!require(Rcpp)){install.packages("Rcpp", repos="http://cran.us.r-project.org")}'
 
 echo "To run the app, enter the command 'Rscript app.R' then paste the link shown into you browser."
