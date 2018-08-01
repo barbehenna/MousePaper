@@ -22,14 +22,14 @@ library(htmlwidgets)
 # write.csv(Sim, "data/SimAbv.csv", row.names = FALSE)
 
 # Sim <- read.csv("data/SimAbv.csv", header = TRUE, row.names = NULL)
-Sim <- read.csv("SimAbv.csv", header = TRUE, row.names = NULL)
+Sim <- read.csv("./data/SimAbv.csv", header = TRUE, row.names = NULL)
 
 Sim <- Sim[Sim$square <= 3, ]
 Sim <- data.table(Sim)
 SimAgg <- Sim[, .(avg = mean(dHat, na.rm = TRUE)), by = .(UniqueID,Density,TrapSpacing,CatchRadius)]
 
-# SimAgg <- read.csv("SimAgg_Continuous.csv", header = TRUE, row.names = FALSE)
-write.csv(SimAgg, "SimAgg_Continuous.csv", row.names = FALSE)
+# SimAgg <- read.csv("./data/SimAgg_Continuous.csv", header = TRUE)
+write.csv(SimAgg, "./data/SimAgg_Continuous.csv", row.names = FALSE)
 
 SimAgg$PercError <- SimAgg$avg / SimAgg$Density
 
