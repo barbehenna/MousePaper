@@ -5,7 +5,7 @@
 # determine whether or not the ranges are good and if we want to make the resolution finer 
 # for more data points. 
 
-# library(data.table)
+library(data.table)
 # library(ggplot2)
 library(plotly)
 library(htmlwidgets)
@@ -102,10 +102,10 @@ Sim <- data.table(Sim)
 SimAgg <- Sim[, .(avg = median(dHat, na.rm = TRUE)), by = .(UniqueID,Density,TrapSpacing,CatchRadius)]
 
 
-
+p <- plot_ly(SimAgg, x = ~TrapSpacing, y = ~CatchRadius, z = ~PercError) %>% add_markers()
 
 p <- plot_ly(x = error$TrapSpacing, y = error$CatchRadius, z = error$perc) %>% add_surface()
-saveWidget(p, file = "perc_vs_ts_cr.html")
+saveWidget(p, file = "perc_vs_ts_cr2.html")
 
 
 
