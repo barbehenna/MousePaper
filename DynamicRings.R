@@ -12,12 +12,12 @@
 
 
 # Load Libraries
+library(data.table)
 library(nortest)
-library(pbapply)
 library(tidyr)
+library(pbapply)
 library(ggplot2)
 library(plotly)
-library(data.table)
 
 
 # library(parallel)
@@ -36,9 +36,9 @@ library(data.table)
 # BROKEN
 
 # Discrete data 
-Sim <- read.csv('./data/2018-02-18 02:01:29_Stats.csv')
+# Sim <- read.csv('./data/2018-02-18 02:01:29_Stats.csv')
 # Sim <- read.csv('./data/discStats10000rows.csv') #smaller set for testing 
-# Sim <- read.csv('./data/discStatsMiddlerows.csv') # bigger set, but still small
+Sim <- read.csv('./data/discStatsMiddlerows.csv') # bigger set, but still small
 Param <- read.csv('./data/2018-02-18 02:01:29_Parameters.csv')
 
 # Sim <- Sim[, c("paramset", "dHat")]
@@ -47,8 +47,8 @@ Param <- as.data.table(Param)
 
 # Free some memory
 # rm(Param)
-Param <- Param[, list(Density, CatchRadius, TrapSpacing, paramset)]
-Sim <- Sim[, list(dHat, square, paramset)]
+# Param <- Param[, list(Density, CatchRadius, TrapSpacing, paramset)]
+# Sim <- Sim[, list(dHat, square, paramset)]
 
 # Create Coordinate (Coord) field of simulation data to ignore any parameters outside
 # of CatchRadius and TrapSpacing (mostly just ignore Boundary). 
@@ -68,8 +68,8 @@ Sim$dHat <- (Sim$dHat - Sim$Density) / Sim$Density
 
 
 # More memory management
-rm(Param)
-gc()
+# rm(Param)
+# gc()
 
 # This seems to work well for well behaved parameter sets, however, for sets where
 # the inside is totally over-run, like paramset=1, the inner most ring is different
@@ -89,9 +89,8 @@ SimByParamset <- split(x = Sim, f = Sim$Coord)
 
 
 # More memorty management
-# rm(Sim)
-Sim <- Sim[, list(dHat, TrapSpacing, CatchRadius, square)]
-gc()
+# Sim <- Sim[, list(dHat, TrapSpacing, CatchRadius, square)]
+# gc()
 
 
 # For each set of parameters:
@@ -255,9 +254,9 @@ goodSquares <- goodSquares[Sim, on = list(TrapSpacing, CatchRadius, square)]
 
 
 # More memory management
-rm(Sim)
-rm(squaresPerParamset)
-gc()
+# rm(Sim)
+# rm(squaresPerParamset)
+# gc()
 
 
 # Aggregate dHat's per point by mean and standard deviation
