@@ -5,6 +5,7 @@
 
 #include <Rcpp.h>
 #include <math.h>
+#include <vector>
 using namespace Rcpp;
 
 // returns a random double according to the uniform distribution on [0,1]
@@ -27,26 +28,36 @@ NumericVector Traps(NumericMatrix trapCoords, NumericMatrix visits, int low, int
   bool caught = false;
   NumericVector mouse(2);
   
+  std::vector<int> possibleTraps[2]; //Array of two zero-sized vectors
+  int index = -1;
+  
   for (int i = low; i < low + nv; i++) { //for a specific visit
     for (int j = 0; j < trapCoords.nrow(); j++) { // and each trap
       //calculate the distance to trap
       dx = sqrt(pow(trapCoords(j,0)-visits(i,0), 2.0));
       dy = sqrt(pow(trapCoords(j,1)-visits(i,1), 2.0));
       if (dx <= delta && dy <= delta) {
-        mouse[0] = j;
-        mouse[1] = i%nv;
+        // mouse[0] = j;
+        // mouse[1] = i%nv;
+        possibleTraps[0].push_back(j);
+        possibleTraps[1].push_back(i%nv);
         caught = true;
-        break;
+        // break;
       }
     }
-    if (caught) {
-      break;
-    }
+    // if (caught) {
+    //   break;
+    // }
   }
   
   if (!caught) {
     mouse[0] = NA_REAL;
     mouse[1] = NA_REAL;
+  }
+  else {
+    index =  (int)(possibleTraps[0].size() * runif(1)(0));
+    mouse[0] = possibleTraps[0].at(index);
+    mouse[1] = possibleTraps[1].at(index);
   }
   
   //return(mouse);
