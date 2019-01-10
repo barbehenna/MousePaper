@@ -112,7 +112,8 @@ for (param in seq(N)) {
     pHatDropNeg <- pHat
     pHatDropNeg[which(pHat < 0)] <- NA # NA<0 returns NA and the which only returns TRUE locations
     pHatZeroNeg <- pHat
-    pHatDropNeg[which(pHat < 0)] <- 0 # NA<0 returns NA and the which only returns TRUE locations
+    pHatZeroNeg[which(pHat < 0)] <- 0 # NA<0 returns NA and the which only returns TRUE locations
+    # There was a typo in the above line, pHatDropNeg instead of pHatZeroNeg
     
     # Save the data
     out <- data.frame(nHat, dHat, pHat, pHatDropNeg, pHatZeroNeg, aHat, 
