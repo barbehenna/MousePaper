@@ -14,6 +14,8 @@
 library(Rcpp)
 Rcpp::sourceCpp(paste0(getwd(), "/SimulationBackend.cpp"))
 
+library(progress) #track progress
+
 
 ###### Simulation Constants ######
 
@@ -23,7 +25,7 @@ SimulationTime <- Sys.time()
 
 # Simulation Constants
 # ncores <- detectCores()
-iterations <- 1000
+iterations <- 2
 nv <- 4
 rings <- c(4,4,4,4,4,4,4,4, 
            4,3,3,3,3,3,3,4, 
@@ -65,6 +67,7 @@ write.table(x = t(c("nHat", "dHat", "pHat", "pHatDropNeg", "pHatZeroNeg",
                   "aHat", "square", "paramset", "UniqueID")),
             file = paste0("data/", SimulationTime, "_Stats.csv"),
             sep = ",", row.names = FALSE, col.names = FALSE)
+pb <- progress_bar$new(total = nrow(Parameters), format = "[:bar] :percent in :elapsed, eta: :eta") #progress
 for (param in seq(N)) {
   ###### Get parameters for simulation ######
   TrapSpacing <- Parameters$TrapSpacing[Parameters$paramset == param]
@@ -121,6 +124,7 @@ for (param in seq(N)) {
     write.table(x = out, file = paste0("data/", SimulationTime, "_Stats.csv"), 
                 sep = ",", row.names = FALSE, col.names = FALSE, append = TRUE)
   }
+  pb$tick() # progress
 }
 
 print(paste("Time Elapsed =", Sys.time()-SimulationTime))
