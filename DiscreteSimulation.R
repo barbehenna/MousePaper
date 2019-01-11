@@ -50,8 +50,8 @@ Parameters$FieldSize <- 7*Parameters$TrapSpacing + 2*Parameters$Boarder
 Parameters$NumMice <- round(Parameters$Density*Parameters$FieldSize*Parameters$FieldSize)
 
 # Remove unviable rows
-remove_rows <- which(Parameters$CatchRadius > Parameters$TrapSpacing/2) # Not viable
-Parameters <- Parameters[-remove_rows,]
+# remove_rows <- which(Parameters$CatchRadius > Parameters$TrapSpacing/2) # Not viable
+# Parameters <- Parameters[-remove_rows,]
 
 # Label each set of parameters for later reference
 Parameters$paramset <- 1:nrow(Parameters)
