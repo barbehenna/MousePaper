@@ -24,8 +24,7 @@ SimulationTime <- Sys.time()
 #print(paste("Starting Simulation at", SimulationTime))
 
 # Simulation Constants
-# ncores <- detectCores()
-iterations <- 2
+iterations <- 10
 nv <- 4
 rings <- c(4,4,4,4,4,4,4,4, 
            4,3,3,3,3,3,3,4, 
@@ -42,9 +41,9 @@ squares <- list(1, 1:2, 1:3, 1:4, 4) # List of the rings in each square
 
 # List of allpossible combinations in the parameter space
 TrapSpacing <- seq(from = 0.25, to = 6, by = 0.25)
-CatchRadius <- seq(from = 0.125, to = 3, by = 0.125)
+CatchRadius <- seq(from = 0.25, to = 6, by = 0.25)
 Boarder <- seq(from = 3, to = 6, by = 1)
-Density <- seq(from = 0.5, to = 2, by = 0.25)
+Density <- seq(from = 0.5, to = 5, by = 0.5)
 Parameters <- expand.grid(Density, Boarder, CatchRadius, TrapSpacing)
 names(Parameters) <- c("Density", "Boarder", "CatchRadius", "TrapSpacing")
 Parameters$FieldSize <- 7*Parameters$TrapSpacing + 2*Parameters$Boarder
