@@ -15,7 +15,7 @@ Simulations[, `:=`(dHat.acc = (dHat - Density)/Density)] # Standardized density 
 
 # Get best square and it's corresponding accuracy
 # reduce size of table
-Simulations.Agg <- Simulations[, list(avg.acc.err = mean(dHat.acc)), by = list(TrapSpacing, CatchRadius, square)] 
+Simulations.Agg <- Simulations[, list(avg.acc.err = mean(dHat.acc), var.acc.err = var(dHat.acc)), by = list(TrapSpacing, CatchRadius, square)] 
 # create temporary column for comparisons
 Simulations.Agg[, `:=`(abs.best.acc = min(abs(avg.acc.err))), by = list(TrapSpacing, CatchRadius)] 
 # remove rows that weren't the best
@@ -107,17 +107,53 @@ ggplot(Simulations.Agg, aes(x = TrapSpacing, y = num.close)) + geom_point()
 
 
 
+#### Variance ####
+
+# We were just fitting accuarcy of our method, i.e. how close we can get to measuring the true density
+# Now we're interested in giving the practitioner an estimated variance for their measurement.
+
+varplt <- Simulations.Agg[TrapSpacing > 0.5, ] %>% 
+  plot_ly(x = ~TrapSpacing, y = ~CatchRadius, z = ~avg.acc.err, color = ~var.acc.err) %>% 
+  add_markers()
+varplt
 
 
+Simulations.Agg[, `:=`(cr.by.ts = CatchRadius/TrapSpacing)]
 
 
+ggplot(Simulations.Agg, aes(x = log(cr.by.ts), y = log(var.acc.err))) + 
+  geom_point()
+# the log-log plot of variance also looks cubic, which is reasuring, I think?
 
+# add trend-line
+ggplot(Simulations.Agg, aes(x = log(cr.by.ts), y = log(var.acc.err))) + 
+  geom_point() +
+  geom_smooth(formula = y ~ x, method = "loess")
+# definately looks cubic-ish
 
+model <- lm(log(var.acc.err) ~ log(cr.by.ts) + I(log(cr.by.ts)^2) + I(log(cr.by.ts)^3), Simulations.Agg)
+summary(model)
+autoplot(model)
+# Interestingly, it looks like the first term is significant in this model
 
+# Plot use the cubic trend-line
+ggplot(Simulations.Agg, aes(x = log(cr.by.ts), y = log(var.acc.err))) + 
+  geom_point(aes(colour = factor(round(TrapSpacing)))) +
+  scale_color_brewer(palette = "Spectral") +
+  geom_smooth(formula = y ~ x + I(x^2) + I(x^3), method = "lm")
 
+# In the model for mean accuary we wanted the repsonce to be near one (so the log is near zero), but now that we're
+# modeling the variance, we want it to be as close to zero as possible (so the log is low or negative). From these plots
+# we see that the log(variance) is REALLY high, there are actually only a few points with low variance. Interestingly, 
+# those points that have low variance seems to also have low CR/TS ratio, indicating that if the traps are very spread out
+# the measurements are consistantly poor, but maybe we can correct for that?
 
-
-
+# And, again, let's compare the two methods on one plot for reassuance
+ggplot(Simulations.Agg, aes(x = log(cr.by.ts), y = log(var.acc.err))) + 
+  geom_point() +
+  geom_smooth(mapping = aes(linetype = "solid"), formula = y ~ x + I(x^2) + I(x^3), method = "lm") + 
+  geom_smooth(mapping = aes(linetype = "dashed"), formula = y ~ x, method = "loess")
+# even better overlap than the mean accuracy model
 
 
 
