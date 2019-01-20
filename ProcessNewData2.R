@@ -154,8 +154,16 @@ ggplot(Simulations.Agg, aes(x = log(CatchRadius/TrapSpacing), y = new.resp)) + g
 # probably has made most of the rest of the cr-ts pairs worse. I've overfit one set of outliers. 
 
 
+# Let's try a weighted linear model
+Simulations.Agg <- Simulations[, list(new.avg.acc.err = mean(new.dHat.acc, na.rm = TRUE),
+                                      new.resp = mean(new.dHat.acc, na.rm = TRUE) + 1,
+                                      var.acc.err = var(new.dHat.acc, na.rm = TRUE)),
+                               by = list(TrapSpacing, CatchRadius, square, new.aHat)]
 
-
-
+Simdf <- Simulations.Agg[, .(mean.val = mean(new.avg.acc.err), var.val = var(new.avg.acc.err)), .(TrapSpacing)]
+ggplot(Simdf, aes(x = TrapSpacing, y = mean.val, weight = 1/var.val)) + geom_point() + geom_smooth(method = "lm", formula = y ~ exp(-x^2))
+# promising
+# Works better for the old method... something is off here. 
+# Is this really -1/(x-1) (ish)?
 
 
