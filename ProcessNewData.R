@@ -9,8 +9,11 @@ Simulations <-  fread("~/Documents/Projects/MousePaper/data/2019-01-10 21_53_47_
 Simulations <- merge(x = Simulations, y = Parameters, by = "paramset", all.x = TRUE)
 
 # Process Simulations
+# remove columns that contain NA's (or are just unused and easily created)
 Simulations <- Simulations[, c("pHatDropNeg", "pHatZeroNeg") := NULL]
+# remove rows containing an NA
 Simulations <- na.omit(Simulations)
+# standardize density estimates. Perfect value is 0 (dHat/Density = 1, if perfect)
 Simulations[, `:=`(dHat.acc = (dHat - Density)/Density)] # Standardized density measurement - 1, centered about 0
 
 # Get best square and it's corresponding accuracy
@@ -72,8 +75,8 @@ anova(reduced.model, model)
 
 # Look at the model! It looks so good :)
 ggplot(Simulations.Agg, aes(x = log(cr.by.ts), y = log(resp))) + 
-  geom_point(aes(colour = factor(round(TrapSpacing)))) + 
-  scale_color_brewer(palette = "Spectral") +
+  geom_point(aes(colour = (CatchRadius/TrapSpacing))) + 
+  # scale_color_brewer(palette = "Spectral") +
   geom_smooth(formula = y ~ I(x^2) + I(x^3), method = "lm") # reduced model
 
 
@@ -113,7 +116,7 @@ ggplot(Simulations.Agg, aes(x = TrapSpacing, y = num.close)) + geom_point()
 # Now we're interested in giving the practitioner an estimated variance for their measurement.
 
 varplt <- Simulations.Agg[TrapSpacing > 0.5, ] %>% 
-  plot_ly(x = ~TrapSpacing, y = ~CatchRadius, z = ~avg.acc.err, color = ~var.acc.err) %>% 
+  plot_ly(x = ~TrapSpacing, y = ~CatchRadius, z = ~var.acc.err, color = ~var.acc.err) %>% 
   add_markers()
 varplt
 
@@ -137,8 +140,8 @@ autoplot(model)
 # Interestingly, it looks like the first term is significant in this model
 
 # Plot use the cubic trend-line
-ggplot(Simulations.Agg, aes(x = log(cr.by.ts), y = log(var.acc.err))) + 
-  geom_point(aes(colour = factor(round(TrapSpacing)))) +
+ggplot(Simulations.Agg, aes(x = log(cr.by.ts), y = log(var.acc.err), colour = factor(round(CatchRadius)))) + 
+  geom_point() +
   scale_color_brewer(palette = "Spectral") +
   geom_smooth(formula = y ~ x + I(x^2) + I(x^3), method = "lm")
 
@@ -162,5 +165,54 @@ ggplot(Simulations.Agg, aes(x = log(cr.by.ts), y = log(var.acc.err))) +
 
 
 
+
+
+
+
+
+#### Square ####
+
+# It would also be great if we could tell the practicioner which square to use 
+
+
+sqrplt <- Simulations.Agg[TrapSpacing > 0.5, ] %>% 
+  plot_ly(x = ~TrapSpacing, y = ~CatchRadius, z = ~square, color = ~square) %>% 
+  add_markers()
+sqrplt
+
+# Flatten
+ggplot(Simulations.Agg) + 
+  geom_point(aes(x = TrapSpacing, y = CatchRadius, colour = factor(square)))
+
+# Well, shoot. It doesn't look like there's any relationship (by eye)
+# let's try the ratio again
+
+ggplot(Simulations.Agg) + geom_point(aes(x = log(cr.by.ts), y = square))
+# yeah... doesn't look like there's much of a trend that I can predict
+
+summary(lm(square ~ log(cr.by.ts), Simulations.Agg))
+# A very pittiful R2 value
+
+
+
+
+# I tried removing all square 5's becuase they aren't square (they're rings) and I don't want 
+# to use them for density prediction. This resulted in TS=0.5, CR=4.5 using square=4 and having
+# a negative resp value (i.e. it's avg.acc.err = -1.34, so resp = -0.34), so the log is not defined.
+# I guess, I know that there are dHat estimates that under-estimate, but this is the only point, 
+# who's most accuate measurement (average by square) is THAT negative. I don't think this is a bug,
+# just an issue with my understanding of the problem. 
+
+
+
+# Accross the whole parameter space (cr x ts) what is the variance in the accuracy by square
+# we want to know the expected error in accuracy for each square so that we can recommed a square 
+# in the case where no informatiuon is supplied or available. We should also compare this to 
+# another method, such as elbow ("inflection point") to see if we can supply a better rule.
+# If we're not seeing any elbow, you're at a special case, and just use the larger square
+# We may also be interested in the mean error 
+
+# By square, what factor do we need to adjust the area by to get perfect density measurements (1)
+# this is a function of TS (maybe cr...)
 
 
