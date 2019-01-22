@@ -24,7 +24,7 @@ SimulationTime <- Sys.time()
 #print(paste("Starting Simulation at", SimulationTime))
 
 # Simulation Constants
-iterations <- 1
+iterations <- 100
 nv <- 4
 rings <- c(4,4,4,4,4,4,4,4, 
            4,3,3,3,3,3,3,4, 
@@ -66,9 +66,12 @@ write.table(x = t(c("nHat", "dHat", "pHat", "pHatDropNeg", "pHatZeroNeg",
                   "aHat", "square", "paramset", "UniqueID")),
             file = paste0("data/", SimulationTime, "_Stats.csv"),
             sep = ",", row.names = FALSE, col.names = FALSE)
+
+# Make cluster and give it necessary parameters
 cl <- makePSOCKcluster(names = rep("localhost", 3))
 clusterCall(cl = cl, Rcpp::sourceCpp, file = paste0(getwd(),"/SimulationBackend.cpp"))
 clusterExport(cl = cl, varlist = list("Parameters", "iterations", "nv", "rings", "squares", "SimulationTime"))
+
 parLapply(cl = cl, X = sample(N), fun = function(param) {
   ###### Get parameters for simulation ######
   TrapSpacing <- Parameters$TrapSpacing[Parameters$paramset == param]
