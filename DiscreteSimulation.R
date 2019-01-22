@@ -67,7 +67,7 @@ write.table(x = t(c("nHat", "dHat", "pHat", "pHatDropNeg", "pHatZeroNeg",
             file = paste0("data/", SimulationTime, "_Stats.csv"),
             sep = ",", row.names = FALSE, col.names = FALSE)
 pb <- progress_bar$new(total = nrow(Parameters), format = "[:bar] :percent in :elapsed, eta: :eta") #progress
-for (param in seq(N)) {
+for (param in sample(N)) {
   ###### Get parameters for simulation ######
   TrapSpacing <- Parameters$TrapSpacing[Parameters$paramset == param]
   CatchRadius <- Parameters$CatchRadius[Parameters$paramset == param]
