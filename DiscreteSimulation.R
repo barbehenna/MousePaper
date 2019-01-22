@@ -12,9 +12,9 @@
 
 ###### Libraries ######
 library(Rcpp)
-Rcpp::sourceCpp(paste0(getwd(), "/SimulationBackend.cpp"))
+# Rcpp::sourceCpp(paste0(getwd(), "/SimulationBackend.cpp"))
 
-library(progress) #track progress
+library(parallel)
 
 
 ###### Simulation Constants ######
@@ -24,7 +24,7 @@ SimulationTime <- Sys.time()
 #print(paste("Starting Simulation at", SimulationTime))
 
 # Simulation Constants
-iterations <- 10
+iterations <- 1
 nv <- 4
 rings <- c(4,4,4,4,4,4,4,4, 
            4,3,3,3,3,3,3,4, 
@@ -66,8 +66,10 @@ write.table(x = t(c("nHat", "dHat", "pHat", "pHatDropNeg", "pHatZeroNeg",
                   "aHat", "square", "paramset", "UniqueID")),
             file = paste0("data/", SimulationTime, "_Stats.csv"),
             sep = ",", row.names = FALSE, col.names = FALSE)
-pb <- progress_bar$new(total = nrow(Parameters), format = "[:bar] :percent in :elapsed, eta: :eta") #progress
-for (param in sample(N)) {
+cl <- makePSOCKcluster(names = rep("localhost", 3))
+clusterCall(cl = cl, Rcpp::sourceCpp, file = paste0(getwd(),"/SimulationBackend.cpp"))
+clusterExport(cl = cl, varlist = list("Parameters", "iterations", "nv", "rings", "squares", "SimulationTime"))
+parLapply(cl = cl, X = sample(N), fun = function(param) {
   ###### Get parameters for simulation ######
   TrapSpacing <- Parameters$TrapSpacing[Parameters$paramset == param]
   CatchRadius <- Parameters$CatchRadius[Parameters$paramset == param]
@@ -123,7 +125,7 @@ for (param in sample(N)) {
     write.table(x = out, file = paste0("data/", SimulationTime, "_Stats.csv"), 
                 sep = ",", row.names = FALSE, col.names = FALSE, append = TRUE)
   }
-  pb$tick() # progress
-}
+})
 
 print(paste("Time Elapsed =", Sys.time()-SimulationTime))
+stopCluster(cl)
