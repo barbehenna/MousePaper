@@ -15,7 +15,7 @@ library(Rcpp)
 # Rcpp::sourceCpp(paste0(getwd(), "/SimulationBackend.cpp"))
 
 library(parallel)
-
+library(pbapply)
 
 ###### Simulation Constants ######
 
@@ -34,16 +34,34 @@ rings <- c(4,4,4,4,4,4,4,4,
            4,3,2,2,2,2,3,4, 
            4,3,3,3,3,3,3,4, 
            4,4,4,4,4,4,4,4)
+rings <- c(8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
+           8,7,7,7,7,7,7,7,7,7,7,7,7,7,7,8,
+           8,7,6,6,6,6,6,6,6,6,6,6,6,6,7,8,
+           8,7,6,5,5,5,5,5,5,5,5,5,5,6,7,8,
+           8,7,6,5,4,4,4,4,4,4,4,4,5,6,7,8,
+           8,7,6,5,4,3,3,3,3,3,3,4,5,6,7,8,
+           8,7,6,5,4,3,2,2,2,2,3,4,5,6,7,8,
+           8,7,6,5,4,3,2,1,1,2,3,4,5,6,7,8,
+           8,7,6,5,4,3,2,1,1,2,3,4,5,6,7,8,
+           8,7,6,5,4,3,2,2,2,2,3,4,5,6,7,8,
+           8,7,6,5,4,3,3,3,3,3,3,4,5,6,7,8,
+           8,7,6,5,4,4,4,4,4,4,4,4,5,6,7,8,
+           8,7,6,5,5,5,5,5,5,5,5,5,5,6,7,8,
+           8,7,6,6,6,6,6,6,6,6,6,6,6,6,7,8,
+           8,7,7,7,7,7,7,7,7,7,7,7,7,7,7,8,
+           8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8)
+# rings <- matrix(rings, nrow = 16, ncol = 16)
+# image(rings, col = rainbow(8))
 squares <- list(1, 1:2, 1:3, 1:4, 4) # List of the rings in each square
-
+squares <- list(1, 1:2, 1:3, 1:4, 1:5, 1:6, 1:7, 1:8, 8)
 
 ###### Build Parameter Space ######
 
 # List of allpossible combinations in the parameter space
-TrapSpacing <- seq(from = 0.25, to = 6, by = 0.25)
-CatchRadius <- seq(from = 0.25, to = 6, by = 0.25)
-Boarder <- seq(from = 3, to = 6, by = 1)
-Density <- seq(from = 0.5, to = 5, by = 0.5)
+TrapSpacing <- seq(from = 0.25, to = 2, by = 0.25)
+CatchRadius <- seq(from = 0.25, to = 1, by = 0.25)
+Boarder <- seq(from = 3, to = 3, by = 1)
+Density <- seq(from = 0.5, to = 5, by = 1)
 Parameters <- expand.grid(Density, Boarder, CatchRadius, TrapSpacing)
 names(Parameters) <- c("Density", "Boarder", "CatchRadius", "TrapSpacing")
 Parameters$FieldSize <- 7*Parameters$TrapSpacing + 2*Parameters$Boarder
@@ -92,15 +110,15 @@ parLapply(cl = cl, X = sample(N), fun = function(param) {
     sim <- na.omit(sim)
     
     # Count mice per trap in each period
-    period1 <- unlist(lapply(seq(64), function(y) sum(sim$trap[sim$day <= 2] == y)))
-    period2 <- unlist(lapply(seq(64), function(y) sum(sim$trap[sim$day >= 3] == y)))
+    period1 <- unlist(lapply(seq(256), function(y) sum(sim$trap[sim$day <= 2] == y)))
+    period2 <- unlist(lapply(seq(256), function(y) sum(sim$trap[sim$day >= 3] == y)))
     traps <- data.frame(period1 = period1,
                         period2 = period2,
                         ring = rings)
     
     ####### Calculate Statistics on the simulation #######
     # Area estimates
-    aHat <- 1:4 #ring numbers
+    aHat <- 1:8 #ring numbers
     aHat <- (TrapSpacing*2*aHat)^2 #concentric ring areas
     aHat <- c(aHat, aHat[4]-aHat[3]) #just ring 4
     
@@ -124,7 +142,7 @@ parLapply(cl = cl, X = sample(N), fun = function(param) {
     
     # Save the data
     out <- data.frame(nHat, dHat, pHat, pHatDropNeg, pHatZeroNeg, aHat, 
-                      square = seq(5), paramset = param, UniqueID = ((param-1)*iterations + iter))
+                      square = seq(9), paramset = param, UniqueID = ((param-1)*iterations + iter))
     write.table(x = out, file = paste0("data/", SimulationTime, "_Stats.csv"), 
                 sep = ",", row.names = FALSE, col.names = FALSE, append = TRUE)
   }

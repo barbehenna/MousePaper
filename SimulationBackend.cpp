@@ -77,17 +77,18 @@ NumericVector Traps(NumericMatrix trapCoords, NumericMatrix visits, int low, int
 NumericMatrix trapSim1(double ts, double fs, double np, double delta, int nv) {
   // ------ Generate Field Parameters ------
   // Constant time, maybe pass into function and only calculate once?
-  double b[8];
-  NumericMatrix trapCoords(64, 2); //64 rows, 2 columns (gx and gy: trap locations)
+  double b[16];
+  // NumericMatrix trapCoords(64, 2); //64 rows, 2 columns (gx and gy: trap locations)
+  NumericMatrix trapCoords(256, 2);
   
-  for (int i = 0; i < 8; i++) {
-    b[i] = (ts/2)*(2*i-7);
+  for (int i = 0; i < 16; i++) {
+    b[i] = (ts/2)*(2*i-15);
   }
   
-  for (int i = 0; i < 8; i++) {
-    for (int j = 0; j < 8; j++) {
-      trapCoords(8*i+j, 0) = b[j];
-      trapCoords(8*i+j, 1) = -1*b[i];
+  for (int i = 0; i < 16; i++) {
+    for (int j = 0; j < 16; j++) {
+      trapCoords(16*i+j, 0) = b[j];
+      trapCoords(16*i+j, 1) = -1*b[i];
     }
   }
   
