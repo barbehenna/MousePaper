@@ -139,11 +139,10 @@ NumericMatrix GenTrapData(double trapSpacing, double catchRadius, double boarder
 
 
 // For a given number of square, return a NumericVector containing which square each trap is in
+// Matrix Output
 // [[Rcpp::export]]
-NumericMatrix GenRingAssignment(int nSquares) {
+NumericMatrix GenRingAssignmentMat(int nSquares) {
   NumericMatrix rings(2*nSquares, 2*nSquares);
-  
-  // std::fill(rings.begin(), rings.end(), nSquares);
   
   for (int i = 0; i < rings.nrow(); i++) {
     for (int j = 0; j < rings.ncol(); j++) {
@@ -157,12 +156,82 @@ NumericMatrix GenRingAssignment(int nSquares) {
 }
 
 
+// For a given number of square, return a NumericVector containing which square each trap is in
+// Vector Output
+// Don't need to worry too much about the order of indexing becasue the ring lables are invarient
+// to flips and rotations.
+// [[Rcpp::export]]
+NumericVector GenRingAssignmentVec(int nSquares) {
+  NumericVector rings(4*nSquares*nSquares);
+  
+  for (int i = 0; i < 2*nSquares; i++) { //2*nSquares = sqrt(length(rings))
+    for (int j = 0; j < 2*nSquares; j++) {
+      //rings(i,j) = nSquares - std::min(i, j); // just top left quadrent
+      //rings(i,j) = std::max(i, j) - nSquares + 1; // just bottom right quadrent
+      //rings(i,j) = std::max(nSquares - std::min(i, j), std::max(i, j) - nSquares + 1);  // All traps (matrix form)
+      rings((2*nSquares*i) + j) = std::max(nSquares - std::min(i, j), std::max(i, j) - nSquares + 1);
+    }
+  }
+  
+  return rings;
+}
+
+
+
+// [[Rcpp::export]]
+NumericMatrix calcPeriodsByTrap(NumericMatrix catchData, int nForages) {
+  NumericMatrix periodSums(catchData.nrow(), 2);
+  
+  int cutoff = nForages/2;
+  std::cout << "cutoff: " << cutoff << " using nForages: " << nForages <<  std::endl;
+  
+  // Sum across first half of forages
+  std::cout << "Sum across first half of forages" << std::endl;
+  NumericMatrix::Column pd1 = periodSums(_,0);
+  for (int day = 0; day < cutoff; day++) {
+    pd1 = pd1 + catchData(_,day);
+  }
+  
+  // Sum across first half of forages
+  std::cout << "Sum across second half of forages" << std::endl;
+  NumericMatrix::Column pd2 = periodSums(_,1);
+  for (int day = cutoff; day < catchData.ncol(); day++) {
+    pd2 = pd2 + catchData(_,day);
+  }
+  
+  return periodSums;
+}
+
+
 
 // Calculate statistics by square
 // [[Rcpp::export]]
-void processResults(double trapSpacing, double catchRadius, double boarder, int nSquares, double trueDensity, int nForages) {
+NumericMatrix ProcessResults(int uuid, int paramset, double trapSpacing, double catchRadius, double boarder, int nSquares, double trueDensity, int nForages) {
   NumericMatrix collectData = GenTrapData(trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages);
-  NumericMatrix ringAssignment = GenRingAssignment(nSquares)
+  NumericVector ringAssignment = GenRingAssignmentVec(nSquares);
+  
+  NumericMatrix Stats(nSquares, 9); //  stats by column (in  order): uuid, paramset, square, pd1, pd2, pHat, nHat, aHat, dHat
+  
+  // Record the simulation's uuid
+  // Reference the second column
+  // Changes propagate to xx (same applies for Row)
+  NumericMatrix::Column uuidCol = Stats(_,0);
+  std::fill(uuidCol.begin(), uuidCol.end(), uuid);
+  
+  // Record the simulation's parameter set
+  NumericMatrix::Column paramsetCol = Stats(_,1);
+  std::fill(paramsetCol.begin(), paramsetCol.end(), paramset);
+  
+  // Record the square values
+  for (int square = 0; square < nSquares; square++) {
+    Stats(square,2) =  square+1;
+  }
+  
+  // Record the number of mice caught in the first half and second half of 
+  // forages as pd1 and pd2 by square (inclusive, i.e square 2 is in square 5...)
+  NumericVector periods = calcPeriodsByTrap(collectData, nForages);
+  
+  return Stats;
 }
 
 

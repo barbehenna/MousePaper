@@ -79,6 +79,22 @@ range(nhat[is.finite(nhat)]) # For this CR, we see no negative nHat's for square
 
 
 
+# Test function calculating both periods by trap
+test <- GenTrapData(trapSpacing = 0.5, catchRadius = 0.3, boarder = 3, nSquares = 8, trueDensity = 3, nForages = 4)
+pds <- t(apply(test, MARGIN =  1, FUN = function(x) {return(c(x[1]+x[2], x[3]+x[4]))}))
+all.equal(pds, calcPeriodsByTrap(test, 4))
+all(pds[,1] == calcPeriodsByTrap(test, 4)[,1])
+all(pds[,2] == calcPeriodsByTrap(test, 4)[,2])
+
+# test different number of forages
+test <- GenTrapData(trapSpacing = 0.5, catchRadius = 0.3, boarder = 3, nSquares = 8, trueDensity = 3, nForages = 6)
+pds <- t(apply(test, MARGIN =  1, FUN = function(x) {return(c(x[1]+x[2]+x[3], x[4]+x[5]+x[6]))}))
+all.equal(pds, calcPeriodsByTrap(test, 6))
+all(pds[,1] == calcPeriodsByTrap(test, 6)[,1])
+all(pds[,2] == calcPeriodsByTrap(test, 6)[,2])
+
+
+
 # Test getRings (matrix form)
 image(GenRingAssignmentMat(4), col = rainbow(4))
 image(GenRingAssignmentMat(6), col = rainbow(6))
