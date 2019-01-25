@@ -31,7 +31,7 @@ NumericVector isCaught(NumericMatrix forages, NumericMatrix Traps, double catchR
       if ((std::abs(dx) < catchRadius) && (std::abs(dy) < catchRadius)) {
         // if mouse is close to trap, it could be caught
         caughtin.push_back(trap);
-        std::cout << "catch! ->  day " << day << " trap " << trap << ": " << Traps(trap,0) << ", " << Traps(trap,1) << std::endl;
+        // std::cout << "catch! ->  day " << day << " trap " << trap << ": " << Traps(trap,0) << ", " << Traps(trap,1) << std::endl;
       }
     }
     
@@ -52,14 +52,14 @@ NumericVector isCaught(NumericMatrix forages, NumericMatrix Traps, double catchR
 // locations the mouse forages (number of forages given by nforages).
 // In the returned matrix, each row is a forage coordinate (x,y).
 // [[Rcpp::export]]
-NumericMatrix GenMouse(int nforages, double fieldSize) {
-  NumericMatrix mouse(nforages, 2); // forage locations for a single mouse
+NumericMatrix GenMouse(int nForages, double fieldSize) {
+  NumericMatrix mouse(nForages, 2); // forage locations for a single mouse
   
   NumericVector home = runif(2); // x and y home coordinates
   home = (home - 0.5) * fieldSize;
   
-  mouse(_,0) = rnorm(nforages) + home[0]; // generate the forages
-  mouse(_,1) = rnorm(nforages) + home[1];
+  mouse(_,0) = rnorm(nForages) + home[0]; // generate the forages
+  mouse(_,1) = rnorm(nForages) + home[1];
 
   return mouse;
 }
@@ -68,13 +68,13 @@ NumericMatrix GenMouse(int nforages, double fieldSize) {
 // This function returns a matrix of trap coordinates, as such, the returned
 // matrix should be a nx2 matrix, (x,y) pairs
 // [[Rcpp::export]]
-NumericMatrix GenTraps(int nrings = 8, double trapspacing = 1.0) {
-  const int trapsperside = 2*nrings;
+NumericMatrix GenTraps(int nSquares = 8, double trapSpacing = 1.0) {
+  const int trapsperside = 2*nSquares;
   double b[trapsperside];
   NumericMatrix trapCoordinates(trapsperside*trapsperside, 2);
   
   for (int i = 0; i < trapsperside; i++) {
-    b[i] = (trapspacing/2) * ((2*i) - (trapsperside - 1));
+    b[i] = (trapSpacing/2) * ((2*i) - (trapsperside - 1));
   }
   
   for (int i = 0; i < trapsperside; i++) {
@@ -86,6 +86,48 @@ NumericMatrix GenTraps(int nrings = 8, double trapspacing = 1.0) {
   
   return trapCoordinates;
 }
+
+
+// For a given set of simulation parameters, calculate the remaining parameters and then 
+// simulate the raw trap data. The return of this function is a NumericMatrix where each
+// row is a single trap and each day is a single day (ordered as ususal). The value of each
+// entry is the number of mice caught in that trap on that day. 
+// [[Rcpp::export]]
+NumericMatrix collectTrapData(double trapSpacing, double catchRadius, double boarder, int nSquares, double trueDensity, int nForages) {
+  double fieldSize = (((2 * nSquares) - 1) * trapSpacing) + (2 * boarder);
+  int nmice = std::round(fieldSize * fieldSize * trueDensity);
+  
+  // std::cout << "fs = " << fieldSize << " nmice = " << nmice << std::endl; // check correct simulation values
+  
+  // Generate (place) traps 
+  NumericMatrix Traps = GenTraps(nSquares, trapSpacing);
+  
+  // Data collection data-structure
+  // One row per trap and one column for catch opprotunity
+  NumericMatrix trapCountByDay(Traps.nrow(), nForages); // initialized to 0
+
+  // for each of the nmice
+  for (int mouse = 0; mouse < nmice; mouse++) {
+    // generate the mouse
+    NumericMatrix currMouse = GenMouse(nForages, fieldSize);
+    
+    // trap mouse (maybe)
+    // recall that isCaught returns a length 2 NumericVector
+    // first term is the trap and second term is day which it's caught
+    // both terms are initialized to -1, to indicate not caught and both 
+    // should be non-negative if the mouse is caught
+    NumericVector mouseRes = isCaught(currMouse, Traps, catchRadius);
+    
+    if (mouseRes(0) >= 0 && mouseRes(1) >= 0) { // we caught the mouse
+      trapCountByDay(mouseRes(0), mouseRes(1))++;
+    }
+  }
+  
+  return trapCountByDay;
+}
+
+
+
 
 
 
