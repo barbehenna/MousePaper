@@ -4,6 +4,17 @@
 using namespace Rcpp;
 
 
+// TODO: 
+// function to calculate statistic by square
+//    using: function to generate the square each trap corresponds to
+// -- or --
+// function to calculate statistic by square
+//    using: function that calculates catches per square by day
+// 
+// function to save single simulation at a file name (optional for above function)
+
+
+
 // For a given single mouse's forage coordinates, go through all traps and 
 // determine which (if any) trap caught the mouse. Return -1 if the mouse is
 // not caught and the traps index of the trap that caught the mouse if it was
@@ -127,7 +138,23 @@ NumericMatrix collectTrapData(double trapSpacing, double catchRadius, double boa
 }
 
 
-
+// For a given number of square, return a NumericVector containing which square each trap is in
+// [[Rcpp::export]]
+NumericMatrix getRingsMatrix(int nSquares) {
+  NumericMatrix rings(2*nSquares, 2*nSquares);
+  
+  // std::fill(rings.begin(), rings.end(), nSquares);
+  
+  for (int i = 0; i < rings.nrow(); i++) {
+    for (int j = 0; j < rings.ncol(); j++) {
+      //rings(i,j) = nSquares - std::min(i, j); // just top left quadrent
+      //rings(i,j) = std::max(i, j) - nSquares + 1; // just bottom right quadrent
+      rings(i,j) = std::max(nSquares - std::min(i, j), std::max(i, j) - nSquares + 1);  // All traps
+    }
+  }
+  
+  return rings;
+}
 
 
 
