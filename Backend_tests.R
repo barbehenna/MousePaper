@@ -44,8 +44,8 @@ mouse <- GenMouse(4, fieldSize = 13.5)
 Traps <- GenTraps(nrings = 8, trapspacing = 0.5)
 
 # day 1 (increase mouse index 1 for other days)
-dxdy <- t(apply(Traps, MARGIN = 1, FUN = function(x) {return(abs(x - mouse[1,]))}))
-which(apply(dxdy, MARGIN = 1, FUN = function(x) {max(x) < 0.3})) - 1 # which trap(s) catch a mouse
+dxdy <- t(apply(Traps, MARGIN = 1, FUN = function(x) {return(abs(x - mouse[2,]))}))
+which(apply(dxdy, MARGIN = 1, FUN = function(x) {max(x) < 0.3})) - 1 # which trap(s) catch a mouse (-1 to match c++ index)
 Traps[apply(dxdy, MARGIN = 1, FUN = function(x) {max(x) < 0.3}), ]
 isCaught(forages = mouse, Traps = Traps, catchRadius = 0.3)
 # iterated enough times to check outputs that I'm happy the answers match for isCaught()

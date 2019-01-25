@@ -12,9 +12,13 @@ using namespace Rcpp;
 // of the mouse, but could be extended to do so by returning an array of indicies
 // (one per forage) of the traps the mouse was caught in.
 // [[Rcpp::export]]
-int isCaught(NumericMatrix forages, NumericMatrix Traps, double catchRadius) {
+NumericVector isCaught(NumericMatrix forages, NumericMatrix Traps, double catchRadius) {
   std::vector<int> caughtin;
+  NumericVector result(2); // first term is trap, second term is day
   double dx, dy;
+  
+  result(0) = -1;
+  result(1) = -1;
   
   for (int day = 0; day < forages.nrow(); day++) { // for each forage
     for (int trap = 0; trap < Traps.nrow(); trap++) { // for each trap
@@ -33,11 +37,14 @@ int isCaught(NumericMatrix forages, NumericMatrix Traps, double catchRadius) {
     
     // If the mouse was caught in a trap on this forage
     if (!caughtin.empty()) {
-      return caughtin[(int) runif(1, 0, caughtin.size())(0)];
+      //return caughtin[(int) runif(1, 0, caughtin.size())(0)];
+      result(0) = caughtin[(int) runif(1, 0, caughtin.size())(0)];
+      result(1) = day;
+      return result;
     }
   }
   
-  return -1;
+  return result;
 }
 
 
@@ -79,4 +86,6 @@ NumericMatrix GenTraps(int nrings = 8, double trapspacing = 1.0) {
   
   return trapCoordinates;
 }
+
+
 
