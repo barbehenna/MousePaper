@@ -261,7 +261,7 @@ NumericMatrix ProcessResults(int uuid, int paramset, double trapSpacing, Numeric
   
   // aHat
   NumericMatrix::Column aHat = Stats(_,7);
-  aHat = 4*Stats(_,2)*Stats(_,2)*trapSpacing*trapSpacing;
+  aHat = 4*Stats(_,2)*Stats(_,2)*trapSpacing*trapSpacing; // (2 * square * ts)^2
   
   // dHat
   NumericMatrix::Column dHat = Stats(_,8);
@@ -274,15 +274,62 @@ NumericMatrix ProcessResults(int uuid, int paramset, double trapSpacing, Numeric
 }
 
 
+// Check that the parameters input are valid and meaningful for the expirament
+// type errors will be handled at runtime and cause an error
+// [[Rcpp::export]]
+bool checkParameters(double trapSpacing, double catchRadius, double boarder, int nSquares, double trueDensity, int nForages) {
+  if (trapSpacing <= 0) {
+    std::cout << "Invalid trapSpacing " << trapSpacing << " (<0)." << std::endl;
+    return false;
+  }
+  
+  if (catchRadius <= 0) {
+    std::cout << "Invalid catchRadius " << catchRadius << " (<0)." << std::endl;
+    return false;
+  }
+  
+  if (boarder <= 0) {
+    std::cout << "Invalid boarder " << boarder << " (<0)." << std::endl;
+    return false;
+  }
+  
+  if (nSquares <= 0) {
+    std::cout << "Invalid nSquares " << nSquares << " (<0)." << std::endl;
+    return false;
+  }
+  
+  if (trueDensity <= 0) {
+    std::cout << "Invalid trueDensity " << trueDensity << " (<0)." << std::endl;
+    return false;
+  }
+  
+  if (nForages <= 0) {
+    std::cout << "Invalid nForages " << nForages << " (<0)." << std::endl;
+    return false;
+  }
+  
+  if ((nForages % 2) != 0) {
+    std::cout << "Invalid nForages " << nForages << " (odd)." << std::endl;
+    return false;
+  }
+  
+  return true;
+}
+
+
 // Function to run simulation
 // Separated to allow R to do both parts independently (to save or examine raw catch data)
 //[[Rcpp::export]]
 NumericMatrix RunSimulation(int uuid, int paramset, double trapSpacing, double catchRadius, double boarder, int nSquares, double trueDensity, int nForages) {
-  NumericMatrix collectData = GenTrapData(trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages);
-  NumericMatrix stats = ProcessResults(uuid, paramset, trapSpacing, collectData);
-  
-  return stats;
+  // check if the inputs will cause an obvious error
+  if (checkParameters(trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages)) {
+    NumericMatrix collectData = GenTrapData(trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages);
+    NumericMatrix stats = ProcessResults(uuid, paramset, trapSpacing, collectData);
+    
+    return stats;
+  } else {
+    return NumericMatrix(0,0);
+  }
 }
-
 
 
