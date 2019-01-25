@@ -177,7 +177,8 @@ NumericVector GenRingAssignmentVec(int nSquares) {
 }
 
 
-
+// Sums the catchs at each trap into the sum of catches in the first half and the sum in the second half
+// Sufficiently messy and maybe something we want to change up in the future.
 // [[Rcpp::export]]
 NumericMatrix calcPeriodsByTrap(NumericMatrix catchData, int nForages) {
   NumericMatrix periodSums(catchData.nrow(), 2);
@@ -204,11 +205,13 @@ NumericMatrix calcPeriodsByTrap(NumericMatrix catchData, int nForages) {
 
 // Calculate statistics by square
 // [[Rcpp::export]]
-NumericMatrix ProcessResults(int uuid, int paramset, double trapSpacing, double catchRadius, double boarder, int nSquares, double trueDensity, int nForages) {
-  NumericMatrix collectData = GenTrapData(trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages);
+NumericMatrix ProcessResults(int uuid, int paramset, double trapSpacing, NumericMatrix collectData) {
+  const int nForages = collectData.ncol();
+  const int nSquares = std::sqrt(collectData.nrow())/2;
   NumericVector ringAssignment = GenRingAssignmentVec(nSquares);
   
-  NumericMatrix Stats(nSquares, 9); //  stats by column (in  order): uuid, paramset, square, pd1, pd2, pHat, nHat, aHat, dHat
+  // stats by column (in  order): uuid, paramset, square, pd1, pd2, pHat, nHat, aHat, dHat
+  NumericMatrix Stats(nSquares, 9); 
   
   // Record the simulation's uuid
   // Reference the second column
@@ -239,7 +242,9 @@ NumericMatrix ProcessResults(int uuid, int paramset, double trapSpacing, double 
     }
   }
   
-  // Now that the data is fully aggregated (for our purposes), we can compute our statistics
+  //
+  // Now that the data is fully aggregated (for our purposes), we can compute our main statistics
+  //
   
   // pHat
   NumericMatrix::Column pHat = Stats(_,5);
@@ -269,7 +274,15 @@ NumericMatrix ProcessResults(int uuid, int paramset, double trapSpacing, double 
 }
 
 
-
+// Function to run simulation
+// Separated to allow R to do both parts independently (to save or examine raw catch data)
+//[[Rcpp::export]]
+NumericMatrix RunSimulation(int uuid, int paramset, double trapSpacing, double catchRadius, double boarder, int nSquares, double trueDensity, int nForages) {
+  NumericMatrix collectData = GenTrapData(trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages);
+  NumericMatrix stats = ProcessResults(uuid, paramset, trapSpacing, collectData);
+  
+  return stats;
+}
 
 
 
