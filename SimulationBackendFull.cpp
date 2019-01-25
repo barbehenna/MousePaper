@@ -104,7 +104,7 @@ NumericMatrix GenTraps(int nSquares = 8, double trapSpacing = 1.0) {
 // row is a single trap and each day is a single day (ordered as ususal). The value of each
 // entry is the number of mice caught in that trap on that day. 
 // [[Rcpp::export]]
-NumericMatrix collectTrapData(double trapSpacing, double catchRadius, double boarder, int nSquares, double trueDensity, int nForages) {
+NumericMatrix GenTrapData(double trapSpacing, double catchRadius, double boarder, int nSquares, double trueDensity, int nForages) {
   double fieldSize = (((2 * nSquares) - 1) * trapSpacing) + (2 * boarder);
   int nmice = std::round(fieldSize * fieldSize * trueDensity);
   
@@ -140,7 +140,7 @@ NumericMatrix collectTrapData(double trapSpacing, double catchRadius, double boa
 
 // For a given number of square, return a NumericVector containing which square each trap is in
 // [[Rcpp::export]]
-NumericMatrix getRingsMatrix(int nSquares) {
+NumericMatrix GenRingAssignment(int nSquares) {
   NumericMatrix rings(2*nSquares, 2*nSquares);
   
   // std::fill(rings.begin(), rings.end(), nSquares);
@@ -155,6 +155,18 @@ NumericMatrix getRingsMatrix(int nSquares) {
   
   return rings;
 }
+
+
+
+// Calculate statistics by square
+// [[Rcpp::export]]
+void processResults(double trapSpacing, double catchRadius, double boarder, int nSquares, double trueDensity, int nForages) {
+  NumericMatrix collectData = GenTrapData(trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages);
+  NumericMatrix ringAssignment = GenRingAssignment(nSquares)
+}
+
+
+
 
 
 

@@ -54,20 +54,20 @@ isCaught(forages = mouse, Traps = Traps, catchRadius = 0.3)
 
 
 # test raw data simulation
-test <- collectTrapData(trapSpacing = 0.5, catchRadius = 0.3, boarder = 3, nSquares = 8, trueDensity = 1, nForages = 4)
+test <- GenTrapData(trapSpacing = 0.5, catchRadius = 0.3, boarder = 3, nSquares = 8, trueDensity = 1, nForages = 4)
 dim(test) # good
 sum(test) # approx number of mice 
 apply(test, MARGIN = 2, FUN = sum) # falls of as expected
 
 range(replicate(1000, {
-  test <- collectTrapData(trapSpacing = 0.5, catchRadius = 0.3, boarder = 3, nSquares = 8, trueDensity = 1, nForages = 4)
+  test <- GenTrapData(trapSpacing = 0.5, catchRadius = 0.3, boarder = 3, nSquares = 8, trueDensity = 1, nForages = 4)
   p1 <- sum(test[,1:2]) 
   p2 <- sum(test[,3:4]) 
   return(p1^2 / (p1 - p2))
 })) ## NEVER ESTIMATES NEGATIVE NHAT FOR SQUARE 8!!!
 
 test <- t(replicate(1000, {
-  test <- collectTrapData(trapSpacing = 0.5, catchRadius = 0.1, boarder = 3, nSquares = 8, trueDensity = 1, nForages = 4)
+  test <- GenTrapData(trapSpacing = 0.5, catchRadius = 0.1, boarder = 3, nSquares = 8, trueDensity = 1, nForages = 4)
   p1 <- sum(test[c(120,121,136,137), 1:2]) 
   p2 <- sum(test[c(120,121,136,137), 3:4]) 
   return(c(p1, p2))
@@ -80,7 +80,7 @@ range(nhat[is.finite(nhat)]) # For this CR, we see no negative nHat's for square
 
 
 # Test getRings (matrix form)
-image(getRings(4), col = rainbow(4))
-image(getRings(6), col = rainbow(6))
-image(getRings(8), col = rainbow(8))
+image(GenRingAssignment(4), col = rainbow(4))
+image(GenRingAssignment(6), col = rainbow(6))
+image(GenRingAssignment(8), col = rainbow(8))
 
