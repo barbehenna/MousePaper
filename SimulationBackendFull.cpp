@@ -183,17 +183,15 @@ NumericMatrix calcPeriodsByTrap(NumericMatrix catchData, int nForages) {
   NumericMatrix periodSums(catchData.nrow(), 2);
   
   int cutoff = nForages/2;
-  std::cout << "cutoff: " << cutoff << " using nForages: " << nForages <<  std::endl;
+  // std::cout << "cutoff: " << cutoff << " using nForages: " << nForages <<  std::endl;
   
   // Sum across first half of forages
-  std::cout << "Sum across first half of forages" << std::endl;
   NumericMatrix::Column pd1 = periodSums(_,0);
   for (int day = 0; day < cutoff; day++) {
     pd1 = pd1 + catchData(_,day);
   }
   
   // Sum across first half of forages
-  std::cout << "Sum across second half of forages" << std::endl;
   NumericMatrix::Column pd2 = periodSums(_,1);
   for (int day = cutoff; day < catchData.ncol(); day++) {
     pd2 = pd2 + catchData(_,day);
@@ -227,10 +225,44 @@ NumericMatrix ProcessResults(int uuid, int paramset, double trapSpacing, double 
     Stats(square,2) =  square+1;
   }
   
-  // Record the number of mice caught in the first half and second half of 
-  // forages as pd1 and pd2 by square (inclusive, i.e square 2 is in square 5...)
+  // Calculate the number of mice caught in the first half and second half of forages
   NumericVector periods = calcPeriodsByTrap(collectData, nForages);
   
+  // record sum of periods by square (pd1 and pd2)
+  for (int trap = 0; trap < collectData.nrow(); trap++) { // for each trap
+    for (int square = ringAssignment(trap)-1; square < nSquares; square++) { // for each square at least as big
+      // rings are [1:n],  indexes are [0:n-1] 
+      // ex: ring 1 in in every square, ring 4 is only in rings >=4
+      // increment count of square and period by traps' value
+      Stats(square,3) = Stats(square,3) + periods(trap,0);
+      Stats(square,4) = Stats(square,4) + periods(trap,1);
+    }
+  }
+  
+  // Now that the data is fully aggregated (for our purposes), we can compute our statistics
+  
+  // pHat
+  NumericMatrix::Column pHat = Stats(_,5);
+  pHat = 1 - sqrt(Stats(_,4) / Stats(_,3)); // 1-sqrt(pd2/pd1)
+  // if pd1 = 0 and pd2 > 0, this implementation returns -Inf
+  // if pd1 = pd2 = 0, this implementation returns NaN
+
+  // nHat
+  NumericMatrix::Column nHat = Stats(_,6);
+  nHat = Stats(_,3)*Stats(_,3)/(Stats(_,3) - Stats(_,4)); // pd1^2 / (pd1 - pd2)
+  // if pd1 = pd2 = 0, this implementation return NaN
+  // if pd1 = pd2 > 0, this implementation returns Inf
+  
+  // aHat
+  NumericMatrix::Column aHat = Stats(_,7);
+  aHat = 4*Stats(_,2)*Stats(_,2)*trapSpacing*trapSpacing;
+  
+  // dHat
+  NumericMatrix::Column dHat = Stats(_,8);
+  dHat = Stats(_,6) / Stats(_,7); // nHat/aHat
+  // if pd1 = pd2 = 0, i.e. nHat = NaN, this implementation returns NaN
+  // if pd1 = pd2 > 0, i.e. nHat = Inf, this implementation returns Inf
+
   return Stats;
 }
 
