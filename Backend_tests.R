@@ -76,3 +76,11 @@ nhat <- test[,1]^2 / (test[,1] - test[,2])
 range(nhat[is.finite(nhat)]) # For this CR, we see no negative nHat's for square 1 either! You can see them if you allow 
 # non-overlapping traps in the middle, i.e. if cr = 0.1 for instance, there will be negative nHat values (not too many)
 
+
+
+
+# Test getRings (matrix form)
+image(getRings(4), col = rainbow(4))
+image(getRings(6), col = rainbow(6))
+image(getRings(8), col = rainbow(8))
+
