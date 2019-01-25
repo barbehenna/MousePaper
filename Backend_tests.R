@@ -1,4 +1,20 @@
 # Test script for the full simulation backend
+Rcpp::sourceCpp('SimulationBackendFull.cpp')
+
+
+# Test Trap generation
+nrow(GenTraps(nrings = 8, trapspacing = 0.5)) # correct number of traps
+nrow(GenTraps(nrings = 4, trapspacing = 0.5))
+nrow(GenTraps(nrings = 1, trapspacing = 0.5))
+
+plot(GenTraps(nrings = 8, trapspacing = 1))
+points(GenTraps(nrings = 6, trapspacing = 1), col = 'green')
+points(GenTraps(nrings = 4, trapspacing = 1), col = 'red') 
+points(GenTraps(nrings = 2, trapspacing = 1), col = 'blue') # rings symmertric from middle
+
+range(GenTraps(nrings = 8, trapspacing = 1)) # correct range
+
+
 
 # Test mouse foraging
 nsamples = 1000
@@ -33,3 +49,15 @@ which(apply(dxdy, MARGIN = 1, FUN = function(x) {max(x) < 0.3})) - 1 # which tra
 Traps[apply(dxdy, MARGIN = 1, FUN = function(x) {max(x) < 0.3}), ]
 isCaught(forages = mouse, Traps = Traps, catchRadius = 0.3)
 # iterated enough times to check outputs that I'm happy the answers match for isCaught()
+
+
+
+
+
+
+
+
+
+
+
+
