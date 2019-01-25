@@ -148,3 +148,36 @@ ggplot(Sims) + geom_density(aes(x = nHat, colour = factor(square))) + geom_vline
 ggplot(Sims) + geom_density(aes(x = dHat, colour = factor(square))) + geom_vline(xintercept = 2)
 
 # generally looks pretty well behaved at this point and gives numbers closer to what we'd expect
+
+
+
+
+
+
+
+
+# Full test run:
+Rcpp::sourceCpp("SimulationBackendFull.cpp")
+TrapSpacing <- seq(from = 0.25, to = 2, by = 0.25)
+CatchRadius <- seq(from = 0.25, to = 1, by = 0.25)
+Boarder <- seq(from = 3, to = 3, by = 1)
+Density <- seq(from = 0.5, to = 5, by = 1)
+Parameters <- expand.grid(Density, Boarder, CatchRadius, TrapSpacing)
+names(Parameters) <- c("Density", "Boarder", "CatchRadius", "TrapSpacing")
+Parameters$paramset <- 1:nrow(Parameters)
+
+
+Simulations <- rep(1:nrow(Parameters), each = 1000)
+Simulations <- cbind(Simulations, 1:length(Simulations))
+
+system.time(
+TestSims <- lapply(1:nrow(Simulations), function(x) {
+  s <- Simulations[x, ]
+  paramset <- Parameters[Parameters$paramset == s[1], ]
+  res <- RunSimulation(uuid = s[2], paramset = s[1], trapSpacing = paramset$TrapSpacing, catchRadius = paramset$CatchRadius, boarder = paramset$Boarder, nSquares = 4, trueDensity = paramset$Density, nForages = 4)
+})
+)
+TestSims <- lapply(TestSims, as.data.frame)
+TestSims <- rbindlist(TestSims)
+names(TestSims) <- c("uuid", "paramset", "square", "pd1", "pd2", "pHat", "nHat", "aHat", "dHat")
+
