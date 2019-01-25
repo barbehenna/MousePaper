@@ -107,3 +107,19 @@ image(matrix(GenRingAssignmentVec(8), 16, 16), col = rainbow(8))
 
 all(c(GenRingAssignmentMat(8)) == GenRingAssignmentVec(8))
 all(c(GenRingAssignmentMat(5)) == GenRingAssignmentVec(5))
+
+
+
+
+# To test ProcessResults, I repeated
+ProcessResults(uuid = 12002, paramset = 37, trapSpacing = 0.5, catchRadius = 0.2, boarder = 3, nSquares = 8, trueDensity = 2, nForages = 4)
+# checking the results to see how calulations are handled with varius pd1 and pd2, looks good
+
+
+
+
+
+
+
+
+
