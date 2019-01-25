@@ -3,16 +3,16 @@ Rcpp::sourceCpp('SimulationBackendFull.cpp')
 
 
 # Test Trap generation
-nrow(GenTraps(nrings = 8, trapspacing = 0.5)) # correct number of traps
-nrow(GenTraps(nrings = 4, trapspacing = 0.5))
-nrow(GenTraps(nrings = 1, trapspacing = 0.5))
+nrow(GenTraps(nSquares = 8, trapSpacing = 0.5)) # correct number of traps
+nrow(GenTraps(nSquares = 4, trapSpacing = 0.5))
+nrow(GenTraps(nSquares = 1, trapSpacing = 0.5))
 
-plot(GenTraps(nrings = 8, trapspacing = 1))
-points(GenTraps(nrings = 6, trapspacing = 1), col = 'green')
-points(GenTraps(nrings = 4, trapspacing = 1), col = 'red') 
-points(GenTraps(nrings = 2, trapspacing = 1), col = 'blue') # rings symmertric from middle
+plot(GenTraps(nSquares = 8, trapSpacing = 1))
+points(GenTraps(nSquares = 6, trapSpacing = 1), col = 'green')
+points(GenTraps(nSquares = 4, trapSpacing = 1), col = 'red') 
+points(GenTraps(nSquares = 2, trapSpacing = 1), col = 'blue') # rings symmertric from middle
 
-range(GenTraps(nrings = 8, trapspacing = 1)) # correct range
+range(GenTraps(nSquares = 8, trapSpacing = 1)) # correct range
 
 
 
@@ -53,11 +53,26 @@ isCaught(forages = mouse, Traps = Traps, catchRadius = 0.3)
 
 
 
+# test raw data simulation
+test <- collectTrapData(trapSpacing = 0.5, catchRadius = 0.3, boarder = 3, nSquares = 8, trueDensity = 1, nForages = 4)
+dim(test) # good
+sum(test) # approx number of mice 
+apply(test, MARGIN = 2, FUN = sum) # falls of as expected
 
+range(replicate(1000, {
+  test <- collectTrapData(trapSpacing = 0.5, catchRadius = 0.3, boarder = 3, nSquares = 8, trueDensity = 1, nForages = 4)
+  p1 <- sum(test[,1:2]) 
+  p2 <- sum(test[,3:4]) 
+  return(p1^2 / (p1 - p2))
+})) ## NEVER ESTIMATES NEGATIVE NHAT FOR SQUARE 8!!!
 
-
-
-
-
-
+test <- t(replicate(1000, {
+  test <- collectTrapData(trapSpacing = 0.5, catchRadius = 0.1, boarder = 3, nSquares = 8, trueDensity = 1, nForages = 4)
+  p1 <- sum(test[c(120,121,136,137), 1:2]) 
+  p2 <- sum(test[c(120,121,136,137), 3:4]) 
+  return(c(p1, p2))
+}))
+nhat <- test[,1]^2 / (test[,1] - test[,2])
+range(nhat[is.finite(nhat)]) # For this CR, we see no negative nHat's for square 1 either! You can see them if you allow 
+# non-overlapping traps in the middle, i.e. if cr = 0.1 for instance, there will be negative nHat values (not too many)
 
