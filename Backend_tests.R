@@ -117,9 +117,34 @@ ProcessResults(uuid = 12002, paramset = 37, trapSpacing = 0.5, catchRadius = 0.2
 
 
 
+# Test parameter checking
+checkParameters(trapSpacing = 0.5, catchRadius = 0.2, boarder = 3, nSquares = 8, trueDensity = 2, nForages = 4)
+checkParameters(trapSpacing = 0, catchRadius = 0.2, boarder = 3, nSquares = 8, trueDensity = 2, nForages = 4)
+checkParameters(trapSpacing = 0.5, catchRadius = -0.2, boarder = 3, nSquares = 8, trueDensity = 2, nForages = 4)
+checkParameters(trapSpacing = 0.5, catchRadius = 0.2, boarder = 3, nSquares = 0, trueDensity = 2, nForages = 4)
+checkParameters(trapSpacing = 0.5, catchRadius = 0.2, boarder = 3, nSquares = 0.5, trueDensity = 2, nForages = 4)
+checkParameters(trapSpacing = 0.5, catchRadius = 0.2, boarder = 3, nSquares = 8, trueDensity = 0, nForages = 4)
+checkParameters(trapSpacing = 0.5, catchRadius = 0.2, boarder = 3, nSquares = 8, trueDensity = 2, nForages = 5)
+checkParameters(trapSpacing = 0.5, catchRadius = 0.2, boarder = 3, nSquares = 8, trueDensity = 2, nForages = 0)
+
+RunSimulation(uuid = 1, paramset = 2, trapSpacing = 0.5, catchRadius = 0.2, boarder = 3, nSquares = 8, trueDensity = 2, nForages = 0)
+RunSimulation(uuid = 1, paramset = 2, trapSpacing = 0.5, catchRadius = 0.2, boarder = 3, nSquares = 8, trueDensity = 2, nForages = 1)
+RunSimulation(uuid = 1.9, paramset = 2.4, trapSpacing = 0.5, catchRadius = 0.2, boarder = 3, nSquares = 8, trueDensity = 2, nForages = 2)
 
 
 
+# Generate some tests at scale to look at the general results
+library(data.table)
+library(ggplot2)
+Sims <- replicate(1000, RunSimulation(uuid = 1, paramset = 1, trapSpacing = 0.5, catchRadius = 0.5, boarder = 3, nSquares = 4, trueDensity = 2, nForages = 4), simplify = FALSE)
+Sims <- lapply(Sims, as.data.frame)
+Sims <- rbindlist(Sims)
+names(Sims) <- c("uuid", "paramset", "square", "pd1", "pd2", "pHat", "nHat", "aHat", "dHat")
 
+# what precent good values
+length(Sims[is.finite(nHat) & nHat > 0, nHat]) / nrow(Sims) # most! :) 
 
+ggplot(Sims) + geom_density(aes(x = nHat, colour = factor(square))) + geom_vline(xintercept = (2*4*0.5 + 3)^2 * 2)
+ggplot(Sims) + geom_density(aes(x = dHat, colour = factor(square))) + geom_vline(xintercept = 2)
 
+# generally looks pretty well behaved at this point and gives numbers closer to what we'd expect
