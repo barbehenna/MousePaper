@@ -80,7 +80,14 @@ range(nhat[is.finite(nhat)]) # For this CR, we see no negative nHat's for square
 
 
 # Test getRings (matrix form)
-image(GenRingAssignment(4), col = rainbow(4))
-image(GenRingAssignment(6), col = rainbow(6))
-image(GenRingAssignment(8), col = rainbow(8))
+image(GenRingAssignmentMat(4), col = rainbow(4))
+image(GenRingAssignmentMat(6), col = rainbow(6))
+image(GenRingAssignmentMat(8), col = rainbow(8))
 
+# Test getRings (vector form)
+image(matrix(GenRingAssignmentVec(4), 8, 8), col = rainbow(4))
+image(matrix(GenRingAssignmentVec(6), 12, 12), col = rainbow(6))
+image(matrix(GenRingAssignmentVec(8), 16, 16), col = rainbow(8))
+
+all(c(GenRingAssignmentMat(8)) == GenRingAssignmentVec(8))
+all(c(GenRingAssignmentMat(5)) == GenRingAssignmentVec(5))
