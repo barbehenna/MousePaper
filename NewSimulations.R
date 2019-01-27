@@ -235,6 +235,8 @@ ggplot(SimSubset[TrapSpacing==2 & CatchRadius == 1.5], aes(sample = dHat/Density
 
 
 
+#### Look at dist of dHat/Density ####
+
 SimSubset <- na.omit(Simulations)
 SimSubset <-  SimSubset[square == 3, ]
 SimSubset <-  SimSubset[is.finite(nHat), ]
@@ -261,5 +263,23 @@ mean(log(SimSubset[, dHat/Density]))
 var(log(SimSubset[, dHat/Density]))
 
 ggplot(SimSubset) + geom_density(aes(x = dHat/Density, colour = "data")) + xlim(0,2) + geom_density(aes(x = exp(rnorm(nrow(SimSubset), mean = mean(log(SimSubset[, dHat/Density])), sd = sd(log(SimSubset[, dHat/Density])))), colour = "log-rnorm"))
+
+
+
+
+#### Judge Density Accuracy by CR and TS ####
+
+ggplot(SimSubset[, .(ratio = CatchRadius/TrapSpacing, dens = mean(dHat/Density)), by = .(TrapSpacing, CatchRadius)], aes(x = log(ratio), y = log(dens))) + 
+  geom_point() + 
+  geom_smooth(method = "loess", aes(colour = "loess")) + 
+  geom_smooth(method = "lm", formula = y~x+I(x^2)+I(x^3), aes(colour = "lm"))
+
+
+ggplot(SimSubset[, .(ratio = CatchRadius/TrapSpacing, dens = mean(dHat/Density)), by = .(TrapSpacing, CatchRadius)], aes(x = log(ratio), y = log(dens))) + 
+  geom_point(aes(colour = factor(cut(TrapSpacing, 4)))) + 
+  geom_smooth(method = "loess", aes(colour = "loess"), se = FALSE) + 
+  geom_smooth(method = "lm", formula = y~x+I(x^2)+I(x^3), aes(colour = "lm"), se = FALSE)
+
+
 
 
