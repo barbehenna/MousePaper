@@ -1,6 +1,7 @@
 library(Rcpp)
 library(data.table)
 library(ggplot2)
+library(plotly)
 library(pbapply)
 
 sourceCpp("SimulationBackendFull.cpp")
@@ -8,6 +9,7 @@ sourceCpp("SimulationBackendFull.cpp")
 
 #### Run Simulations ####
 # 100 interations of (ts = 0.25->3.0, cr = 0.25->2.0, B = 3->6, D = 0.5->4.5) from takes about 20 minutes
+# 1 interation of (ts = 0.25->360, cr = 0.25->5.0, B = 3->6, D = 0.5->4.5) from takes about 1.67 minutes
 
 # Define parameters for various simulations 
 TrapSpacing <- seq(from = 0.25, to = 3, by = 0.25)
@@ -180,16 +182,50 @@ ggplot(SimSubset) + geom_density(aes(x = dHat/Density)) + xlim(0,2)
 # hot damn!
 # Let's try to tease appart that heavy tail
 
+ggplot(SimSubset) + geom_density(aes(x = dHat/Density, colour = factor(Density))) + xlim(0,2) # nope
+ggplot(SimSubset) + geom_density(aes(x = dHat/Density, colour = factor(Boarder))) + xlim(0,2)  # nope
+#  So  it doesn't  depend on field size or number of mice, nice!
+
+ggplot(SimSubset) + geom_density(aes(x = dHat/Density, colour = factor(TrapSpacing))) + xlim(0,5)
+# That  looks like it fixes it. Notice how symmetric the distribution of the TS = 3.0 is 
+
+ggplot(SimSubset) + geom_density(aes(x = dHat/Density, colour = factor(round(CatchRadius)))) + xlim(0,4)
+# looks like that small bump on the left is due to small CatchRadii
 
 
 
+## Normal dist?
+ggplot(SimSubset, aes(sample = dHat/Density, colour = factor(TrapSpacing))) + stat_qq()
+# not too much, very heavy tailed
 
 
+# Look at the density accuracy by ts and cr
+ggplot(SimSubset[, .(dHat.acc = mean(dHat/Density)), by = .(TrapSpacing, CatchRadius)], aes(x = TrapSpacing, y = CatchRadius, colour = factor(cut(dHat.acc, 15)), size = 4)) + 
+  geom_point()
+
+# sample plot but in 3d so I don't need to round means
+plot_ly(data = SimSubset[, .(dHat.acc = mean(dHat/Density)), by = .(TrapSpacing, CatchRadius)], 
+        x = ~TrapSpacing, y = ~CatchRadius, z = ~dHat.acc, color = ~dHat.acc) %>% 
+  add_markers()
+
+# same as above but with size proportional to the variance
+plot_ly(data = SimSubset[, .(dHat.mean = mean(dHat/Density), dHat.var = var(dHat/Density)), by = .(TrapSpacing, CatchRadius)], 
+        x = ~TrapSpacing, y = ~CatchRadius, z = ~dHat.mean, color = ~dHat.mean, size = ~dHat.var,  marker = list(symbol = 'circle', sizemode = 'diameter')) %>% 
+  add_markers()
 
 
+# Look at a sinlge point
+ggplot(SimSubset[TrapSpacing==2 & CatchRadius == 1.5], aes(x = dHat/Density)) + geom_density() # looks nice :)
+ggplot(SimSubset[TrapSpacing==2 & CatchRadius == 1.5], aes(sample = dHat/Density)) + stat_qq() + stat_qq_line() # Heavy tails... t-dist?
 
-
-
-
-
-
+# # compare dist with normal and t(df=1)
+# # pretty close to normal
+# Temp.dat <- SimSubset[TrapSpacing==2 & CatchRadius == 1.5]
+# Temp.dat[, `:=`(samples = (dHat/Density - mean(dHat/Density))/sd(dHat/Density))]
+# Temp.dat[, `:=`(rnorm.samples = rnorm(nrow(Temp.dat)))]
+# Temp.dat[, `:=`(rt1.samples = rt(nrow(Temp.dat), df = 1))]
+# ggplot(Temp.dat) + 
+#   geom_density(aes(x = samples, col = "data")) + 
+#   geom_density(aes(x = rnorm.samples, colour = "rnorm")) + 
+#   geom_density(aes(x = rt1.samples, colour = "rt1")) + 
+#   xlim(-6,6)
