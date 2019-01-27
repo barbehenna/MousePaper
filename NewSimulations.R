@@ -229,3 +229,37 @@ ggplot(SimSubset[TrapSpacing==2 & CatchRadius == 1.5], aes(sample = dHat/Density
 #   geom_density(aes(x = rnorm.samples, colour = "rnorm")) + 
 #   geom_density(aes(x = rt1.samples, colour = "rt1")) + 
 #   xlim(-6,6)
+
+
+
+
+
+
+SimSubset <- na.omit(Simulations)
+SimSubset <-  SimSubset[square == 3, ]
+SimSubset <-  SimSubset[is.finite(nHat), ]
+SimSubset <-  SimSubset[nHat > 0, ]
+
+SimSubset <- SimSubset[TrapSpacing>0.5 & CatchRadius > 0.25]
+ggplot(SimSubset) + geom_density(aes(x = dHat/Density)) + xlim(0,2)
+
+# This looks pretty log-normal
+dist.mode(SimSubset[,dHat/Density])
+median(SimSubset[,dHat/Density])
+
+# log normal ->
+# mode = exp(mu - sigma^2)
+# median = exp(mu)
+# mean = exp(mu + sigma^2/2)
+
+mu = log(median(SimSubset[, dHat/Density]))
+sigma2 = mu - log(dist.mode(SimSubset[, dHat/Density]))
+exp(mu + sigma2/2)
+mean(SimSubset[, dHat/Density])
+
+mean(log(SimSubset[, dHat/Density]))
+var(log(SimSubset[, dHat/Density]))
+
+ggplot(SimSubset) + geom_density(aes(x = dHat/Density, colour = "data")) + xlim(0,2) + geom_density(aes(x = exp(rnorm(nrow(SimSubset), mean = mean(log(SimSubset[, dHat/Density])), sd = sd(log(SimSubset[, dHat/Density])))), colour = "log-rnorm"))
+
+
