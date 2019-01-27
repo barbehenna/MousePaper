@@ -1,6 +1,19 @@
 # Test script for the full simulation backend
+
+
+#### Libraries ####
+library(Rcpp)
+library(data.table)
+library(ggplot2)
+
+
+# Load full simulation backend
 Rcpp::sourceCpp('SimulationBackendFull.cpp')
 
+
+
+
+#### Run Simulations ####
 
 # Test Trap generation
 nrow(GenTraps(nSquares = 8, trapSpacing = 0.5)) # correct number of traps
