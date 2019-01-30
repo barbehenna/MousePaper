@@ -8,12 +8,10 @@ sourceCpp("SimulationBackendFull.cpp")
 
 
 #### Run Simulations ####
-# 100 interations of (ts = 0.25->3.0, cr = 0.25->2.0, B = 3->6, D = 0.5->4.5) from takes about 20 minutes
-# 1 interation of (ts = 0.25->360, cr = 0.25->5.0, B = 3->6, D = 0.5->4.5) from takes about 1.67 minutes
 
 # Define parameters for various simulations 
-TrapSpacing <- seq(from = 0.25, to = 3, by = 0.25)
-CatchRadius <- seq(from = 0.25, to = 2, by = 0.25)
+TrapSpacing <- seq(from = 0.25, to = 6, by = 0.25)
+CatchRadius <- seq(from = 0.25, to = 5, by = 0.25)
 Boarder <- seq(from = 3, to = 6, by = 1)
 Density <- seq(from = 0.5, to = 5, by = 0.5)
 Parameters <- expand.grid(Density, Boarder, CatchRadius, TrapSpacing)
@@ -25,7 +23,7 @@ SimRuns <- rep(1:nrow(Parameters), each = 100)
 SimRuns <- cbind(SimRuns, 1:length(SimRuns))
 
 # Run simulations
-set.seed(0) # I think this works
+# set.seed(0) # I think this works
 system.time(
 Simulations <- lapply(seq(nrow(SimRuns)), function(x) {
   s <- SimRuns[x, ]
@@ -44,13 +42,6 @@ names(Simulations) <- c("uuid", "paramset", "square", "pd1", "pd2", "pHat", "nHa
 
 
 
-# library(microbenchmark)
-# microbenchmark(Simulations <- lapply(seq(nrow(SimRuns)), function(x) {
-#   s <- SimRuns[x, ]
-#   paramset <- Parameters[Parameters$paramset == s[1], ]
-#   res <- RunSimulation(uuid = s[2], paramset = s[1], trapSpacing = paramset$TrapSpacing, catchRadius = paramset$CatchRadius, boarder = paramset$Boarder, nSquares = 4, trueDensity = paramset$Density, nForages = 4)
-#   return(as.data.frame(res))
-# }), times = 10)
 
 
 
@@ -59,8 +50,8 @@ names(Simulations) <- c("uuid", "paramset", "square", "pd1", "pd2", "pHat", "nHa
 #### Run analysis ####
 
 # Load results
-Parameters <- fread("data/ParametersNewSample.csv")
-Simulations <- fread("data/SimulationsNewSample.csv")
+Parameters <- fread("data/NewBackend-Parameters1.csv")
+Simulations <- fread("data/NewBackend-Simulations1.csv")
 
 # merge in parameters
 Simulations <- merge(x = Simulations, y = Parameters, by = "paramset")
@@ -69,8 +60,6 @@ Simulations <- merge(x = Simulations, y = Parameters, by = "paramset")
 Simulations[, `:=`(nSquares =  max(square)),  by = .(uuid)] #number of squares used in specific simulation run
 Simulations[, `:=`(nMice = round(Density * (2 * TrapSpacing * nSquares + 2 * Boarder)^2))] # re-calculate number of mice used
 
-# Standardize density estimate
-Simulations[, `:=`(dHat.std = dHat/Density)]
 
 
 # define a hopefully well-behaved subset of the data to explore
@@ -81,204 +70,79 @@ SimSubset <-  SimSubset[nHat > 0, ]
 
 
 
-ggplot(SimSubset) + geom_density(aes(x = nHat/nMice))
+# How good are we doing with our density estimates?
+ggplot(SimSubset) + geom_density(aes(x = dHat, colour = factor(Density))) + xlim(0,8)
 
-# explore how close nHat is to the true number of mice
-# nice and consistent modes
-# pretty heavy tailed even the median isn't exactly at the mode
-ggplot(SimSubset) +
-  geom_density(aes(x = nHat/nMice,  colour = factor(Density))) +
-  geom_vline(xintercept = median(SimSubset$nHat/SimSubset$nMice)) +
-  geom_vline(xintercept = mean(SimSubset$nHat/SimSubset$nMice)) +
-  xlim(0,2) +
-  ggtitle("median and mean")
+# Damn that's pretty, but how does it look when we standardize our estimates?
+# dHat/Density = 1 if we are accurate
+ggplot(SimSubset) + geom_density(aes(x = dHat/Density, colour = factor(Density))) + xlim(0,2)
 
+# So it looks like regardless of how many mice we have (all things considered other than density)
+# our measurements are very good (the tails on our standardized densities aren't symmetric)
 
-# estimate mode of numeric distribution
-dist.mode <- function(vals, na.rm = FALSE) {
-  dens <- density(vals, n = 2^20, na.rm = na.rm)
-  return(dens$x[which.max(dens$y)])
-}
+# Why are the tails not symmetric? It could just be becuase they're bounded on the left
+ggplot(SimSubset) + geom_density(aes(x = dHat/Density, colour = factor(CatchRadius))) + xlim(0,2)
+# So small CatchRadius is why we see heavy tails on the left, but they almost over correct for that issue/observation
+ggplot(SimSubset) + geom_density(aes(x = dHat/Density, colour = factor(TrapSpacing))) + xlim(0,2)
+# And low TrapSpacing is why we see heavy tails on the right
 
-
-# same as above, but drawring the estimated mode of nHat/nMice
-# now that's pretty sexy... Consistent multiplicative error for any number of mice
-ggplot(SimSubset) +
-  geom_density(aes(x = nHat/nMice,  colour = factor(Density))) +
-  geom_vline(xintercept = dist.mode(SimSubset$nHat/SimSubset$nMice)) +
-  xlim(0,2) +
-  ggtitle("mode")
-
-dist.mode(SimSubset$nHat/SimSubset$nMice)
-mean(SimSubset$nHat/SimSubset$nMice)
-median(SimSubset$nHat/SimSubset$nMice)
-
-SimSubset[, `:=`(nHat.adj.mode = nHat/dist.mode(nHat/nMice), 
-                 nHat.adj.mean = nHat/mean(nHat/nMice),
-                 nHat.adj.median = nHat/median(nHat/nMice))]
-
-# Check out nHat accuracy by adjustment (mode = 1, mean = 1, or median = 1)
-ggplot(SimSubset) + geom_density(aes(x = nHat.adj.mode/nMice, colour = factor(Density))) + xlim(0,2)
-ggplot(SimSubset) + geom_density(aes(x = nHat.adj.mode/nMice)) + xlim(0,2)
+# Look just at what should be a "good" combination
+ggplot(SimSubset[TrapSpacing==5 & CatchRadius==4]) + geom_density(aes(x = dHat/Density)) 
+# yeah... that looks pretty nice :)
 
 
-# Now that we've adjusted nHat, how are we doing on density estimates?
-ggplot(SimSubset) + geom_density(aes(x =  (nHat.adj.mode/aHat), colour = factor(Density))) + xlim(0,24)
+# Ok, let's parse out this more in 3d
+dHatSummary <- SimSubset[, .(dHat.mean = mean(dHat/Density), dHat.var = var(dHat/Density)), by = .(TrapSpacing, CatchRadius)]
 
-# Scaled by true density
-ggplot(SimSubset) + geom_density(aes(x =  nHat.adj.mode/(aHat*Density), colour = factor(Density))) + xlim(0,8)
-# They're all off by a constant factor? 
-
-
-SimSubset[, dist.mode(nHat.adj.mode/(aHat*Density))]
-SimSubset[, mean(nHat.adj.mode/(aHat*Density))]
-SimSubset[, median(nHat.adj.mode/(aHat*Density))]
-
-ggplot(SimSubset) + 
-  geom_density(aes(x =  nHat.adj.mode/(aHat*Density), colour = factor(Density))) +
-  geom_vline(xintercept = SimSubset[, dist.mode(nHat.adj.mode/(aHat*Density))]) + 
-  xlim(0,8)
-
-
-# Adjust density estimate by mode?
-SimSubset[, `:=`(dHat.adj = nHat.adj.mode / (aHat*dist.mode(nHat.adj.mode/(aHat*Density))))]
-
-SimSubset[, dist.mode(nHat.adj.mode/(aHat*Density))] #factor scaling aHat
-
-# plot
-ggplot(SimSubset) + geom_density(aes(x = dHat.adj/Density, colour = factor(Density))) + xlim(0,2)
-
-
-
-
-## From scratch now:
-
-SimSubset <- na.omit(Simulations)
-SimSubset <-  SimSubset[square == 3, ]
-SimSubset <-  SimSubset[is.finite(nHat), ]
-SimSubset <-  SimSubset[nHat > 0, ]
-
-nHat.scale = 1/dist.mode(SimSubset$nHat/SimSubset$nMice)
-aHat.scale = dist.mode((SimSubset$nHat*nHat.scale) / (SimSubset$aHat*SimSubset$Density))
-
-
-# illustrate nHat.adj accuracy
-ggplot(SimSubset) + geom_density(aes(x = nHat*nHat.scale/nMice)) + xlim(0,2)
-
-SimSubset[, `:=`(nHat.new = nHat * nHat.scale, aHat.new = aHat * aHat.scale)]
-ggplot(SimSubset) + geom_density(aes(x = nHat.new/aHat.new, colour = factor(Density))) + xlim(0,7)
-ggplot(SimSubset) + geom_density(aes(x = nHat.new/(aHat.new * Density), colour = factor(Density))) + xlim(0,2)
-
-
-# Mode -> highest probability of having near zero error in density prediction
-# Mean -> average is closest to the true density if you keep repleating the expirament and the expiraments are identical
-# Median -> median is closest to the true density if you keep repleating the expirament and the expiraments are identical (more robust, slower convergence?)
-
-
-dHat.scale = nHat.scale/aHat.scale ## This is really close to 1!
-# what does the actual  dHat look like? We haven't checked yet...
-ggplot(SimSubset) + geom_density(aes(x = dHat/Density)) + xlim(0,2)
-
-# hot damn!
-# Let's try to tease appart that heavy tail
-
-ggplot(SimSubset) + geom_density(aes(x = dHat/Density, colour = factor(Density))) + xlim(0,2) # nope
-ggplot(SimSubset) + geom_density(aes(x = dHat/Density, colour = factor(Boarder))) + xlim(0,2)  # nope
-#  So  it doesn't  depend on field size or number of mice, nice!
-
-ggplot(SimSubset) + geom_density(aes(x = dHat/Density, colour = factor(TrapSpacing))) + xlim(0,5)
-# That  looks like it fixes it. Notice how symmetric the distribution of the TS = 3.0 is 
-
-ggplot(SimSubset) + geom_density(aes(x = dHat/Density, colour = factor(round(CatchRadius)))) + xlim(0,4)
-# looks like that small bump on the left is due to small CatchRadii
-
-
-
-## Normal dist?
-ggplot(SimSubset, aes(sample = dHat/Density, colour = factor(TrapSpacing))) + stat_qq()
-# not too much, very heavy tailed
-
-
-# Look at the density accuracy by ts and cr
-ggplot(SimSubset[, .(dHat.acc = mean(dHat/Density)), by = .(TrapSpacing, CatchRadius)], aes(x = TrapSpacing, y = CatchRadius, colour = factor(cut(dHat.acc, 15)), size = 4)) + 
-  geom_point()
-
-# sample plot but in 3d so I don't need to round means
-plot_ly(data = SimSubset[, .(dHat.acc = mean(dHat/Density)), by = .(TrapSpacing, CatchRadius)], 
-        x = ~TrapSpacing, y = ~CatchRadius, z = ~dHat.acc, color = ~dHat.acc) %>% 
+# Using log10 dHat.mean for to center the colors around the correct value (dHat/Density = 1 => log(dHat/Density) = 0)
+p <- dHatSummary %>% 
+  plot_ly(x = ~TrapSpacing, y = ~CatchRadius, z = ~dHat.mean, color = ~log10(dHat.mean)) %>%
   add_markers()
+p
 
-# same as above but with size proportional to the variance
-plot_ly(data = SimSubset[, .(dHat.mean = mean(dHat/Density), dHat.var = var(dHat/Density)), by = .(TrapSpacing, CatchRadius)], 
-        x = ~TrapSpacing, y = ~CatchRadius, z = ~dHat.mean, color = ~dHat.mean, size = ~dHat.var,  marker = list(symbol = 'circle', sizemode = 'diameter')) %>% 
+# We have variance information, let's plot that too with size
+p <- dHatSummary %>% 
+  plot_ly(x = ~TrapSpacing, y = ~CatchRadius, z = ~dHat.mean, color = ~log10(dHat.mean), size = ~dHat.var, marker = list(symbol = 'circle', sizemode = 'diameter')) %>%
   add_markers()
+p
+
+# Looks good, but let's crop it a little so that it's easier to read
+p <- dHatSummary[TrapSpacing>0.25 & CatchRadius>0.25] %>% 
+  plot_ly(x = ~TrapSpacing, y = ~CatchRadius, z = ~dHat.mean, color = ~log10(dHat.mean), size = ~dHat.var, marker = list(symbol = 'circle', sizemode = 'diameter')) %>%
+  add_markers()
+p
+
+# Just for fun, look at only those points whose mean dHat/Density value is within 5% of correct
+p <- dHatSummary[abs(dHat.mean-1)<0.05] %>% 
+  plot_ly(x = ~TrapSpacing, y = ~CatchRadius, z = ~dHat.mean, color = ~log10(dHat.mean), size = ~dHat.var, marker = list(symbol = 'circle', sizemode = 'diameter')) %>%
+  add_markers()
+p
 
 
-# Look at a sinlge point
-ggplot(SimSubset[TrapSpacing==2 & CatchRadius == 1.5], aes(x = dHat/Density)) + geom_density() # looks nice :)
-ggplot(SimSubset[TrapSpacing==2 & CatchRadius == 1.5], aes(sample = dHat/Density)) + stat_qq() + stat_qq_line() # Heavy tails... t-dist?
-
-# # compare dist with normal and t(df=1)
-# # pretty close to normal
-# Temp.dat <- SimSubset[TrapSpacing==2 & CatchRadius == 1.5]
-# Temp.dat[, `:=`(samples = (dHat/Density - mean(dHat/Density))/sd(dHat/Density))]
-# Temp.dat[, `:=`(rnorm.samples = rnorm(nrow(Temp.dat)))]
-# Temp.dat[, `:=`(rt1.samples = rt(nrow(Temp.dat), df = 1))]
-# ggplot(Temp.dat) + 
-#   geom_density(aes(x = samples, col = "data")) + 
-#   geom_density(aes(x = rnorm.samples, colour = "rnorm")) + 
-#   geom_density(aes(x = rt1.samples, colour = "rt1")) + 
-#   xlim(-6,6)
-
-
-
-
-
-
-#### Look at dist of dHat/Density ####
-
-SimSubset <- na.omit(Simulations)
-SimSubset <-  SimSubset[square == 3, ]
-SimSubset <-  SimSubset[is.finite(nHat), ]
-SimSubset <-  SimSubset[nHat > 0, ]
-
-SimSubset <- SimSubset[TrapSpacing>0.5 & CatchRadius > 0.25]
-ggplot(SimSubset) + geom_density(aes(x = dHat/Density)) + xlim(0,2)
-
-# This looks pretty log-normal
-dist.mode(SimSubset[,dHat/Density])
-median(SimSubset[,dHat/Density])
-
-# log normal ->
-# mode = exp(mu - sigma^2)
-# median = exp(mu)
-# mean = exp(mu + sigma^2/2)
-
-mu = log(median(SimSubset[, dHat/Density]))
-sigma2 = mu - log(dist.mode(SimSubset[, dHat/Density]))
-exp(mu + sigma2/2)
-mean(SimSubset[, dHat/Density])
-
-mean(log(SimSubset[, dHat/Density]))
-var(log(SimSubset[, dHat/Density]))
-
-ggplot(SimSubset) + geom_density(aes(x = dHat/Density, colour = "data")) + xlim(0,2) + geom_density(aes(x = exp(rnorm(nrow(SimSubset), mean = mean(log(SimSubset[, dHat/Density])), sd = sd(log(SimSubset[, dHat/Density])))), colour = "log-rnorm"))
+# save any of these plots as interactive html's using 
+# htmlwidgets::saveWidget(widget = as_widget(p), file = "~/Desktop/3d-dHat_plot.html")
 
 
 
 
-#### Judge Density Accuracy by CR and TS ####
-
-ggplot(SimSubset[, .(ratio = CatchRadius/TrapSpacing, dens = mean(dHat/Density)), by = .(TrapSpacing, CatchRadius)], aes(x = log(ratio), y = log(dens))) + 
-  geom_point() + 
-  geom_smooth(method = "loess", aes(colour = "loess")) + 
-  geom_smooth(method = "lm", formula = y~x+I(x^2)+I(x^3), aes(colour = "lm"))
+# So... dHat is a pretty good estimate of the true density for most trap spacings
 
 
-ggplot(SimSubset[, .(ratio = CatchRadius/TrapSpacing, dens = mean(dHat/Density)), by = .(TrapSpacing, CatchRadius)], aes(x = log(ratio), y = log(dens))) + 
-  geom_point(aes(colour = factor(cut(TrapSpacing, 4)))) + 
-  geom_smooth(method = "loess", aes(colour = "loess"), se = FALSE) + 
-  geom_smooth(method = "lm", formula = y~x+I(x^2)+I(x^3), aes(colour = "lm"), se = FALSE)
+
+# There is a true catch radius, how can we find that or how do we run an expirament around that?
+
+# Repeat at a few differnt trap spacings (along one of the lines below)
+ggplot(dHatSummary[is.element(CatchRadius, c(1,2,3,4,5))]) + 
+  geom_hline(yintercept = 0) +
+  geom_path(aes(x = TrapSpacing, y = log(dHat.mean), colour = factor(CatchRadius), linetype = factor(CatchRadius))) + 
+  ggtitle("Samples of Cross-sections From 3d Plot", subtitle = "Goal is dHat.mean = 1, drawn in black")
+
+# It looks like we expect: for each curve there's a region where it performs quite well and in the middle,
+# but, in general, it looks something like a downward cubic function. To the left of the good region, the 
+# estimator is consistently way too high and to the right it is too low. Looking at how it changes by Catch Radius
+# we see that the good region shifts to the right as Catch Radius increases. This makes sense because we expect
+# the method to give the best results when CT ~= TS/2. A much larger set of Catch Radius and Trap Spacing 
+# pairs may be needed to define exactly where the method works best (by eye I'd guess 2CR <= TS <= 3CR)
 
 
 
