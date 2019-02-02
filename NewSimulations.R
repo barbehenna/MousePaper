@@ -2,6 +2,7 @@
 
 library(Rcpp)
 library(data.table)
+library(tidyr)
 library(parallel)
 library(ggplot2)
 library(plotly)
@@ -71,8 +72,8 @@ fwrite(Simulations, "data/SimulationsNewSample3.csv")
 #### Run analysis ####
 
 # Load results
-Parameters <- fread("data/NewBackend-Parameters1.csv")
-Simulations <- fread("data/NewBackend-Simulations1.csv")
+Parameters <- fread("data/NewBackend-ParametersFull_B3.csv")
+Simulations <- fread("data/NewBackend-SimulationsFull_B3.csv")
 
 # merge in parameters
 Simulations <- merge(x = Simulations, y = Parameters, by = "paramset")
@@ -82,6 +83,13 @@ Simulations[, `:=`(nSquares = max(square)), by = .(uuid)] # number of squares us
 Simulations[, `:=`(nMice = round(Density * (2 * TrapSpacing * nSquares + 2 * Boarder)^2))] # re-calculate number of mice used
 
 
+square.results <- Simulations[!is.na(dHat) & is.finite(dHat) & dHat > 0, .(mean.dHat = mean(dHat / Density, na.rm = TRUE), median.dHat = median(dHat / Density, na.rm = TRUE), mode.dHat = dens.mode(dHat / Density, na.rm = TRUE), var.dHat = var(dHat / Density, na.rm = TRUE)), by = .(square)]
+
+square.results <- square.results %>% 
+  gather(key = statistic, value = value, -square) %>%
+  arrange(square)
+
+ggplot(square.results) + geom_point(aes(x = square, y = value, colour = statistic), size = 2) + geom_path(aes(x = square, y = value, colour = statistic))
 
 # define a hopefully well-behaved subset of the data to explore
 SimSubset <- na.omit(Simulations)
@@ -164,3 +172,11 @@ ggplot(dHatSummary[is.element(CatchRadius, c(1, 2, 3, 4, 5))]) +
 # we see that the good region shifts to the right as Catch Radius increases. This makes sense because we expect
 # the method to give the best results when CT ~= TS/2. A much larger set of Catch Radius and Trap Spacing
 # pairs may be needed to define exactly where the method works best (by eye I'd guess 2CR <= TS <= 3CR)
+
+
+
+
+
+
+
+
