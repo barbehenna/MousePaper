@@ -89,7 +89,7 @@ square.results <- square.results %>%
   gather(key = statistic, value = value, -square) %>%
   arrange(square)
 
-ggplot(square.results) + geom_point(aes(x = square, y = value, colour = statistic), size = 2) + geom_path(aes(x = square, y = value, colour = statistic))
+ggplot(square.results, aes(x = square, y = value, colour = statistic)) + geom_point(size = 2) + geom_line()
 
 # define a hopefully well-behaved subset of the data to explore
 SimSubset <- na.omit(Simulations)
@@ -177,6 +177,18 @@ ggplot(dHatSummary[is.element(CatchRadius, c(1, 2, 3, 4, 5))]) +
 
 
 
+#### Experimenting ####
 
+Simulations <- Simulations[!is.na(dHat) & is.finite(dHat) & dHat>0, ]
+Temp.Sim <- Simulations[, .(median.dHat = median(dHat/Density)), by = .(square, TrapSpacing, CatchRadius)]
 
+ggplot(Temp.Sim, aes(x = square, y = median.dHat, colour = cut(log(CatchRadius/TrapSpacing), breaks = 6))) + geom_point() + geom_hline(yintercept = 1)
+# So it looks like if  log(CR/TS) is within (-1.06, 1.06) ie CR/TS is within 0.35 and 2.88 (or it's probably 1/e to e) then our model
+# is pretty reliable for most squares. When the ratio is outside that, the estimator doesn't work very well. 
+# If you zoom in, you can see that there's still variation when the abs(log(cr/ts)) <= 2, it's pretty tight cutting off at +-one.
 
+# There are too many points, let's just look at one good slice of TS
+ts = 4
+ggplot(Temp.Sim[TrapSpacing == ts, ], aes(x = square, y = median.dHat, colour = factor(CatchRadius))) + geom_point() + geom_line() + geom_hline(yintercept = 1) + ggtitle(paste("slice of plot by ts =", ts))
+# so in some cases there is an observable elbow, but it doesn't look like it happens at the same places for every cr
+# and it doesn't necessarily happen at all.
