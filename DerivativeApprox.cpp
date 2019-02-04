@@ -2,6 +2,11 @@
 using namespace Rcpp;
 
 
+// These formula are based off of those in this article: https://en.wikipedia.org/wiki/Finite_difference
+// They come about by looking at the second-order Taylor exapsion at a point. You can also get them by 
+// taking the average of two slope estimates (Euler method estimates)
+
+
 // vector must be of at least length 3 
 // assuming constant step size
 // [[Rcpp::export]]
