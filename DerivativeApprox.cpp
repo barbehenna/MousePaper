@@ -6,11 +6,13 @@ using namespace Rcpp;
 // assuming constant step size
 // [[Rcpp::export]]
 NumericVector SecondOrderCentral(NumericVector x, double h = 1) {
-  NumericVector out(x.size()-2);
+  NumericVector out(x.size());
   
-  for (int i = 1; i < x.size()-1; i++) {
-    out[i-1] = (x[i+1] - 2*x[i] + x[i-1])/(h*h);
+  out[0] = NA_REAL;
+  for (int i = 2; i < x.size(); i++) {
+    out[i-1] = (x[i-2] - (2*x[i-1]) + x[i])/(h*h);
   }
+  out[out.size()-1] = NA_REAL;
   
   return out;
 }
