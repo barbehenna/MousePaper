@@ -22,11 +22,15 @@ NumericVector SecondOrderCentral(NumericVector x, double h = 1) {
 // assuming constant step size
 // [[Rcpp::export]]
 NumericVector SecondOrderForward(NumericVector x, double h = 1) {
-  NumericVector out(x.size()-2);
+  NumericVector out(x.size());
   
+  printf("size:  %lu\n", x.size());
   for (int i = 0; i < x.size()-2; i++) {
-    out[i-1] = (x[i+2] - 2*x[i+1] + x[i])/(h*h);
+    printf("i=%d: %f %f %f\n", i, x[i],  x[i+1], x[i+2]);
+    out[i] = (x[i+2] - 2*x[i+1] + x[i])/(h*h);
   }
+  out[out.size()-2] = NA_REAL;
+  out[out.size()-1] = NA_REAL;
   
   return out;
 }
