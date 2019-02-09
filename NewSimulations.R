@@ -2,10 +2,7 @@
 
 library(Rcpp)
 library(data.table)
-library(tidyr)
 library(parallel)
-library(ggplot2)
-library(plotly)
 library(pbapply)
 
 sourceCpp("SimulationBackendFull.cpp")
