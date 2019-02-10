@@ -8,13 +8,6 @@ library(pbapply)
 sourceCpp("SimulationBackendFull.cpp")
 
 
-# For reference and playing, here's my function to find the sample mode
-dens.mode <- function(x, na.rm = FALSE) {
-  dens <- density(x = x, na.rm = na.rm, n = 2^20)
-  return(dens$x[which.max(dens$y)])
-}
-
-
 #### Run Simulations ####
 
 # Define parameters for various simulations
