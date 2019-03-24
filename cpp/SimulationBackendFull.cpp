@@ -379,6 +379,36 @@ NumericVector isCaught2(NumericMatrix forages, NumericMatrix Traps, double catch
 }
 
 
+// This function generates all of the mice used in the simulation and returns a
+// matrix (rows: mice, columns: forage) containing the trap the mouse is caught in.
+// if the mouse is not caught, it's trap is -1. 
+// [[Rcpp::export]]
+NumericMatrix GenAllMice(double trapSpacing, double catchRadius, double boarder, int nSquares, double trueDensity, int nForages) {
+  double fieldSize = (((2 * nSquares) - 1) * trapSpacing) + (2 * boarder);
+  int nmice = std::round(fieldSize * fieldSize * trueDensity);
+  
+  std::cout << "num mice to generate: " << nmice << std::endl;
+  
+  // Initialize all mice martix
+  // one row per mouse
+  // columns are traps mouse is caught in
+  NumericMatrix Mice(nmice, nForages);
+  
+  // Generate (place) traps
+  NumericMatrix Traps = GenTraps(nSquares, trapSpacing);
+  
+  // generate mice
+  for (int mouse = 0; mouse < nmice; mouse++) {
+    // generate the mouse
+    NumericMatrix currMouse = GenMouse(nForages, fieldSize);
+    // record traps the mouse ends up in
+    Mice(mouse,_) = isCaught2(currMouse, Traps, catchRadius);
+  }
+  
+  return Mice;
+}
+
+
 
 
 
