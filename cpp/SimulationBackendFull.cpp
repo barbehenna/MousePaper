@@ -333,3 +333,52 @@ NumericMatrix RunSimulation(int uuid, int paramset, double trapSpacing, double c
 }
 
 
+// For a given single mouse's forage coordinates, go through all traps and 
+// determine which (if any) trap caught the mouse for a given forage. Return -1 
+// if the mouse is not caught and the traps index of the trap that caught the 
+// mouse if it was caught.
+// The general algorithm (as implemented currently) does not implment recapture
+// of the mouse, but could be extended to do so by returning an array of indicies
+// (one per forage) of the traps the mouse was caught in.
+// [[Rcpp::export]]
+NumericVector isCaught2(NumericMatrix forages, NumericMatrix Traps, double catchRadius) {
+  std::vector<int> caughtin;
+  NumericVector result(forages.nrow()); // every entry is the trap that caught that mouse on that forage
+  double dx, dy;
+  
+  // result = -1;
+  
+  for (int day = 0; day < forages.nrow(); day++) { // for each forage
+    for (int trap = 0; trap < Traps.nrow(); trap++) { // for each trap
+      // calculate distance to trap
+      dx = forages(day,0) - Traps(trap,0);
+      dy = forages(day,1) - Traps(trap,1);
+      
+      // potentially catch mouse if close enough to trap
+      // square catch area
+      if ((std::abs(dx) < catchRadius) && (std::abs(dy) < catchRadius)) {
+        // if mouse is close to trap, it could be caught
+        caughtin.push_back(trap);
+        // std::cout << "catch ->  day " << day << " trap " << trap << ": " << Traps(trap,0) << ", " << Traps(trap,1) << std::endl;
+      }
+    }
+    
+    // If the mouse was caught in a trap on this forage
+    // record trap that caught the mouse
+    if (!caughtin.empty()) {
+      result(day) = caughtin[(int) runif(1, 0, caughtin.size())(0)];
+    } else { // or record -1 for not caught
+      result(day) = -1;
+    }
+    
+    // reset caughtin for the next day
+    caughtin.clear();
+  }
+  
+  return result;
+}
+
+
+
+
+
