@@ -18,6 +18,7 @@ Simulations <- merge(x = Simulations, y = Parameters, by = "paramset")
 # Approx 1.7% of simulations, also cleans up dHat
 Simulations <- Simulations[nHat >= 0]
 Simulations <- Simulations[is.finite(nHat)]
+Simulations <- Simulations[is.finite(pHat)]
 
 Simulations <- as_tibble(Simulations)
 FullSimulations <- Simulations #backup for easy of testing
@@ -109,11 +110,15 @@ Simulations %>%
 
 
 Simulations %>%
-  filter(CatchRadius == 0.5 & square == 6) %>%
+  filter(CatchRadius == 0.5 & square == 7) %>%
   mutate(acc = dHat/Density) -> SimModData
 lmmod = lm(log(acc) ~ poly(sqrt(TrapSpacing), degree = 3, raw = TRUE) + poly(pHat, degree = 2, raw = TRUE), SimModData)
 summary(lmmod)
 
 
+Simulations %>% 
+  filter(CatchRadius == 0.5) %>%
+  mutate(acc = dHat/Density) -> SimModData
+lmmod = lm(log(acc) ~ poly(sqrt(TrapSpacing), degree = 3, raw = TRUE) + poly(pHat, degree = 2, raw = TRUE) + square, SimModData)
 
 
