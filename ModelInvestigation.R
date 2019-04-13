@@ -96,4 +96,24 @@ Simulations %>%
     geom_smooth(aes(colour = "default")) +
     geom_smooth(aes(colour = "lm"), method = "lm", formula = y ~ poly(x, degree = 3, raw = TRUE)) + 
     geom_smooth(aes(colour = "rlm"), method = "rlm", formula = y ~ poly(x, degree = 3, raw = TRUE))
+# notice that these models seem to do really well, but clearly the variance is not equal across the plots
   
+
+Simulations %>%
+  filter(CatchRadius == 0.5 & square == 6) %>%
+  mutate(acc = dHat/Density) %>%
+  sample_frac(0.1)  %>%
+  ggplot(aes(x = sqrt(TrapSpacing), y = log(acc))) +
+  geom_point(aes(colour = pHat)) +
+  geom_smooth()
+
+
+Simulations %>%
+  filter(CatchRadius == 0.5 & square == 6) %>%
+  mutate(acc = dHat/Density) -> SimModData
+lmmod = lm(log(acc) ~ poly(sqrt(TrapSpacing), degree = 3, raw = TRUE) + poly(pHat, degree = 2, raw = TRUE), SimModData)
+summary(lmmod)
+
+
+
+
