@@ -387,8 +387,6 @@ NumericMatrix GenAllMice(double trapSpacing, double catchRadius, double boarder,
   double fieldSize = (((2 * nSquares) - 1) * trapSpacing) + (2 * boarder);
   int nmice = std::round(fieldSize * fieldSize * trueDensity);
   
-  std::cout << "num mice to generate: " << nmice << std::endl;
-  
   // Initialize all mice martix
   // one row per mouse
   // columns are traps mouse is caught in
@@ -409,6 +407,34 @@ NumericMatrix GenAllMice(double trapSpacing, double catchRadius, double boarder,
 }
 
 
+// Taking in the mice matrix (rows: mouse, columns: trap caught in by forage),
+// convert the data to a matrix (rows: traps, columns: number of mice caught on forage).
+// The result of this function is a matrix where each entry is the number of mice first
+// caught in a particular trap on a particular day, counting only the first catch. 
+// [[Rcpp::export]]
+NumericMatrix MiceDataToTrapData(NumericMatrix MiceData, int nSquares, int nForages) {
+  int nTraps = 4 * nSquares * nSquares; // (2*nSquares)^2
+
+  // Data collection data-structure
+  // One row per trap and one column for catch opprotunity
+  NumericMatrix trapCountByDay(nTraps, nForages); // initialized to 0
+  
+  // Convert to by trap and day counts
+  for (int mouse = 0; mouse < MiceData.nrow(); mouse++) {
+    for (int forage = 0; forage < nForages; forage++) {
+      if (MiceData(mouse, forage) >= 0) { //caught the mouse
+        trapCountByDay(MiceData(mouse, forage), forage)++;
+        break;
+      }
+    }
+  }
+  
+  return trapCountByDay;
+}
 
 
-
+// Taking in the traps each mouse is caught in on each of its forages,
+// estimate the population size via catch and release. To aggregate the 
+// observations, pass in the cut-off day (observation 1 < cut-off day, 
+// observation 2 >= cut-off day). This function returns a single estimate
+// of the total population size. 

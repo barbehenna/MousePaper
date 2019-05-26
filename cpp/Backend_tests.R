@@ -194,3 +194,27 @@ TestSims <- lapply(TestSims, as.data.frame)
 TestSims <- rbindlist(TestSims)
 names(TestSims) <- c("uuid", "paramset", "square", "pd1", "pd2", "pHat", "nHat", "aHat", "dHat")
 
+
+
+#### Test new approach ####
+
+# Test for isCaught2
+
+# generate a mouse
+mouse = GenMouse(nForages = 20, fieldSize = 13)
+colMeans(mouse)
+# generate traps
+Traps = GenTraps()
+
+# For just the first day, look at the frequency of the traps that catch the mouse
+table(replicate(1000, isCaught2(forages = mouse, Traps = Traps, catchRadius = 1)[1]))
+# For just the tenth day, look at the frequency of the traps that catch the mouse
+table(replicate(1000, isCaught2(forages = mouse, Traps = Traps, catchRadius = 1)[10]))
+
+
+
+# Test for GenAllMice
+GenAllMice(trapSpacing = 2, catchRadius = 0.5, boarder = 3, nSquares = 4, trueDensity = 1, nForages = 4)
+
+
+
