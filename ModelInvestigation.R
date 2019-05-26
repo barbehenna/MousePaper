@@ -5,6 +5,7 @@ library(tibble)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+library(ggfortify)
 
 #### Load Data ####
 
@@ -29,8 +30,8 @@ FullSimulations <- Simulations #backup for easy of testing
 # Down sample Simulations for speed
 Simulations %>% 
   # filter(square == 7) %>%
-  mutate(bias = Density - dHat) %>%
-  sample_frac(0.005) -> Simulations
+  mutate(bias = Density - dHat, acc = dHat/Density) %>%
+  sample_frac(0.5) -> Simulations
 
 
 #### Model bias ####
@@ -103,9 +104,9 @@ Simulations %>%
 Simulations %>%
   filter(CatchRadius == 0.5 & square == 6) %>%
   mutate(acc = dHat/Density) %>%
-  sample_frac(0.1)  %>%
+  sample_frac(0.005)  %>%
   ggplot(aes(x = sqrt(TrapSpacing), y = log(acc))) +
-  geom_point(aes(colour = pHat)) +
+  geom_point(aes(colour = sqrt(pHat))) +
   geom_smooth()
 
 
@@ -120,5 +121,40 @@ Simulations %>%
   filter(CatchRadius == 0.5) %>%
   mutate(acc = dHat/Density) -> SimModData
 lmmod = lm(log(acc) ~ poly(sqrt(TrapSpacing), degree = 3, raw = TRUE) + poly(pHat, degree = 2, raw = TRUE) + square, SimModData)
+summary(lmmod)
+# looks like this model works almost just as well when we factor in  square as a variable
+# degree 3 pHat works well too...
+
+Simulations %>% 
+  filter(CatchRadius == 0.5) %>%
+  mutate(acc = dHat/Density) -> SimModData
+lmmod = lm(log(acc) ~ poly(sqrt(TrapSpacing), degree = 3, raw = TRUE) + poly(pHat, degree = 2, raw = TRUE), SimModData)
+summary(lmmod)
+# but... it also well when not using square as a predictor
+
+
+Simulations %>% 
+  filter(CatchRadius == 0.5) %>%
+  mutate(acc = dHat/Density) -> SimModData
+lmmod = lm(log(acc) ~ poly(sqrt(TrapSpacing), degree = 3, raw = TRUE) + poly(pHat, degree = 2, raw = TRUE) + square, SimModData)
+summary(lmmod)
+SimModData$resid =  residuals(lmmod)
+ggplot(SimModData, aes(x = sqrt(TrapSpacing), y = resid)) +
+  geom_point() + 
+  geom_smooth()
+
+
+Simulations %>% 
+  filter(CatchRadius == 0.5) %>%
+  mutate(acc = dHat/Density, 
+         sqrtTrapSpacing = sqrt(TrapSpacing), 
+         sqrtTrapSpacing3 = sqrt(TrapSpacing)^3,
+         pHat2 = pHat^2,
+         pHat3 = pHat^3) %>%
+  select(-dHat, -Density, -paramset, -uuid, -pd1, -pd2) -> SimModData
+lmmod = lm(log(acc) ~ poly(sqrt(TrapSpacing), degree = 3, raw = TRUE) + sqrt(pHat) + pHat, SimModData)
+summary(lmmod)
+ggfortify::autoplot(lmmod)  #takes a while
+
 
 
