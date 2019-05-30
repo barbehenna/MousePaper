@@ -1,5 +1,6 @@
 #### Libraries ####
 
+library(MASS)
 library(data.table)
 library(tibble)
 library(dplyr)
@@ -155,6 +156,84 @@ Simulations %>%
 lmmod = lm(log(acc) ~ poly(sqrt(TrapSpacing), degree = 3, raw = TRUE) + sqrt(pHat) + pHat, SimModData)
 summary(lmmod)
 ggfortify::autoplot(lmmod)  #takes a while
+
+
+#### May 26 ####
+
+Simulations %>% 
+  filter(CatchRadius<=4, TrapSpacing<=4) %>%
+  sample_frac(0.5) %>%
+  group_by(TrapSpacing, CatchRadius, square) %>%
+  summarise(mse = mean((Density - dHat)^2)) %>%
+  ggplot(aes(x = TrapSpacing, y = CatchRadius, colour = cut(log10(mse),5))) +
+    facet_wrap(~square) + 
+    geom_point() + 
+    geom_abline(slope = 0.5) + 
+    geom_abline(slope = 1) +
+    geom_abline(slope = 2) #also try slope = 1 and 2
+# This seems to indicate to me that squares [4:7] are the best in general, maybe even 3 too
+
+# Check the distributuion of one point for reference
+Simulations %>%
+  filter(CatchRadius == 0.5, TrapSpacing == 2) %>%
+  mutate(l2error = (Density - dHat)^2) %>%
+  ggplot(aes(x = log10(l2error))) + 
+    geom_density()
+
+# Lets model square 6 with CR/TS in [0.5, 2] (good square, good zone)
+# First looking at the data, dHat works REALLY well
+Simulations %>%
+  filter(square == 6, CatchRadius/TrapSpacing < 2, CatchRadius/TrapSpacing > 0.5) %>%
+  ggplot(aes(x = factor(Density), y = dHat)) +
+    geom_violin()
+
+# Make model, works well
+mod = Simulations %>%
+  filter(square == 6, CatchRadius/TrapSpacing < 2, CatchRadius/TrapSpacing > 0.5) %>%
+  sample_n(10000) %>%
+  lm(Density ~ dHat, .)
+summary(mod)
+autoplot(mod)
+# Can be better? Looks like theirs a funky effect
+
+autoplot(mod) + geom_point(aes(colour = factor(Density)))
+# Seems like there's some effect that's being driven by the actual density
+
+mod = Simulations %>%
+  filter(square == 6, CatchRadius/TrapSpacing < 2, CatchRadius/TrapSpacing > 0.5) %>%
+  sample_n(10000) %>%
+  lm(rep(1,10000) ~ I(dHat/Density) - 1, .)
+summary(mod)
+autoplot(mod)
+# Density is definately the factor startifiing the diagnostc plots
+
+# Look at modeling the bias
+Simulations %>% 
+  filter(square == 6, CatchRadius/TrapSpacing < 2, CatchRadius/TrapSpacing > 0.5, CatchRadius<2) %>%
+  sample_n(10000) %>%
+  ggplot(aes(x = CatchRadius/TrapSpacing, y = Density-dHat)) +
+    geom_point()
+
+mod = Simulations %>%
+  filter(square == 6, CatchRadius/TrapSpacing < 2, CatchRadius/TrapSpacing > 0.5, CatchRadius<2) %>%
+  sample_n(10000) %>%
+  lm(Density ~ dHat + I(pHat^2), .)
+summary(mod)
+autoplot(mod)
+
+
+# Create new variable dHat2 = - pd2^2 / (pd1 - pd2), so that dHat1 + dHat2 = pd1+pd2 
+# Don't throw out any information
+Simulations %>% 
+  mutate(dHat2 = -(pd2)^2 / (pd1 - pd2)) -> Simulations
+mod = Simulations %>%
+  filter(square == 6, CatchRadius/TrapSpacing < 2, CatchRadius/TrapSpacing > 0.5, CatchRadius<2) %>%
+  sample_n(10000) %>%
+  lm(Density ~ dHat + I(dHat^2) + dHat2 + I(dHat2^2) + dHat:dHat2, .)
+summary(mod)
+autoplot(mod)
+
+
 
 
 
