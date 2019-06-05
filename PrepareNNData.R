@@ -25,9 +25,10 @@ Simulations <- Simulations[is.finite(pHat)]
 
 Simulations %>%
   mutate(square = paste0("square", square)) %>%
-  select(uuid, square, dHat, Density) -> Simulations
+  select(uuid, square, dHat, Density, TrapSpacing, CatchRadius) -> Simulations
 
 Simulations = dcast(Simulations, ... ~ square, fill = NA, value.var = "dHat")
+Simulations = na.omit(Simulations)
 
 head(Simulations)
 
