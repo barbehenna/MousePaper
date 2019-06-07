@@ -11,10 +11,10 @@ sourceCpp("cpp/SimulationBackendFull.cpp")
 #### Run Simulations ####
 
 # Define parameters for various simulations
-TrapSpacing <- seq(from = 0.25, to = 6, by = 0.25)
-CatchRadius <- seq(from = 0.25, to = 6, by = 0.25)
-Boarder <- seq(from = 3, to = 6, by = 6)
-Density <- seq(from = 0.5, to = 5, by = 0.5)
+TrapSpacing <- seq(from = 0.1, to = 4, by = .1)
+CatchRadius <- seq(from = 0.1, to = 4, by = 0.1)
+Boarder <- seq(from = 3, to = 6, by = 3)
+Density <- seq(from = 0.5, to = 5, by = 1)
 Parameters <- expand.grid(Density, Boarder, CatchRadius, TrapSpacing)
 names(Parameters) <- c("Density", "Boarder", "CatchRadius", "TrapSpacing")
 Parameters$paramset <- 1:nrow(Parameters)
@@ -42,15 +42,15 @@ system.time(
     paramset <- Parameters[Parameters$paramset == s[1], ]
     res <- RunSimulation(uuid = s[2], paramset = s[1], trapSpacing = paramset$TrapSpacing, catchRadius = paramset$CatchRadius, boarder = paramset$Boarder, nSquares = 8, trueDensity = paramset$Density, nForages = 4)
     return(as.data.frame(res))
-  }, mc.cores = 2, mc.set.seed = TRUE)
+  }, mc.cores = 10, mc.set.seed = TRUE)
 )
 Simulations <- rbindlist(Simulations)
 names(Simulations) <- c("uuid", "paramset", "square", "pd1", "pd2", "pHat", "nHat", "aHat", "dHat")
 
 
 # save results
-fwrite(Parameters, "data/ParametersNewSample3.csv")
-fwrite(Simulations, "data/SimulationsNewSample3.csv")
+fwrite(Parameters, "data/ParametersNewSample.csv")
+fwrite(Simulations, "data/SimulationsNewSample.csv")
 
 
 
