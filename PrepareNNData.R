@@ -8,8 +8,8 @@ library(tidyr)
 
 #### Load Data ####
 
-Parameters <- fread("data/NewBackend-ParametersFull_B3.csv")
-Simulations <- fread("data/NewBackend-SimulationsFull_B3.csv")
+Parameters <- fread("data/NewBackend-ParametersFull.csv")
+Simulations <- fread("data/NewBackend-SimulationsFull.csv")
 
 # merge in parameters
 Simulations <- merge(x = Simulations, y = Parameters, by = "paramset")
