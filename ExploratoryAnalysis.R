@@ -5,6 +5,7 @@
 library(data.table)
 library(tidyr)
 library(ggplot2)
+library(ggfortify)
 library(plotly)
 library(pbapply)
 
@@ -211,4 +212,29 @@ lapply(SimSplit, function(x) {
   sec.der <- rev(diff(diff(x[, dHat])))
   return(c("uuid" = x[1,uuid], "good.square" = max(c(2, which(abs(sec.der) < 0.05)[1]), na.rm = TRUE)))
 })
+
+
+
+
+
+###########
+
+# Using NN training data
+
+###########
+
+data = fread("data/trainingdata.csv")
+data = data[, uuid:=NULL]
+
+datasample = data[sample(x=nrow(data), size = 1000)]
+
+lmmodel = lm(Density ~ ., datasample)
+autoplot(lmmodel)
+
+datasample[, `:=`(TS2 = TrapSpacing^2, CR2 = CatchRadius^2, CRTS = CatchRadius*TrapSpacing, CRbyTS = CatchRadius/TrapSpacing)]
+lmmodel = lm(Density ~ ., datasample)
+autoplot(lmmodel)
+
+rfmodel = randomForest(Density ~ ., datasample)
+
 
