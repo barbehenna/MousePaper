@@ -5,19 +5,198 @@
 
 using namespace Rcpp;
 
-// rcpp_hello_world
-List rcpp_hello_world();
-RcppExport SEXP _mousesim_rcpp_hello_world() {
+// isCaught
+NumericVector isCaught(NumericMatrix forages, NumericMatrix Traps, double catchRadius);
+RcppExport SEXP _mousesim_isCaught(SEXP foragesSEXP, SEXP TrapsSEXP, SEXP catchRadiusSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(rcpp_hello_world());
+    Rcpp::traits::input_parameter< NumericMatrix >::type forages(foragesSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Traps(TrapsSEXP);
+    Rcpp::traits::input_parameter< double >::type catchRadius(catchRadiusSEXP);
+    rcpp_result_gen = Rcpp::wrap(isCaught(forages, Traps, catchRadius));
+    return rcpp_result_gen;
+END_RCPP
+}
+// GenMouse
+NumericMatrix GenMouse(int nForages, double fieldSize);
+RcppExport SEXP _mousesim_GenMouse(SEXP nForagesSEXP, SEXP fieldSizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type nForages(nForagesSEXP);
+    Rcpp::traits::input_parameter< double >::type fieldSize(fieldSizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(GenMouse(nForages, fieldSize));
+    return rcpp_result_gen;
+END_RCPP
+}
+// GenTraps
+NumericMatrix GenTraps(int nSquares, double trapSpacing);
+RcppExport SEXP _mousesim_GenTraps(SEXP nSquaresSEXP, SEXP trapSpacingSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type nSquares(nSquaresSEXP);
+    Rcpp::traits::input_parameter< double >::type trapSpacing(trapSpacingSEXP);
+    rcpp_result_gen = Rcpp::wrap(GenTraps(nSquares, trapSpacing));
+    return rcpp_result_gen;
+END_RCPP
+}
+// GenTrapData
+NumericMatrix GenTrapData(double trapSpacing, double catchRadius, double boarder, int nSquares, double trueDensity, int nForages);
+RcppExport SEXP _mousesim_GenTrapData(SEXP trapSpacingSEXP, SEXP catchRadiusSEXP, SEXP boarderSEXP, SEXP nSquaresSEXP, SEXP trueDensitySEXP, SEXP nForagesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type trapSpacing(trapSpacingSEXP);
+    Rcpp::traits::input_parameter< double >::type catchRadius(catchRadiusSEXP);
+    Rcpp::traits::input_parameter< double >::type boarder(boarderSEXP);
+    Rcpp::traits::input_parameter< int >::type nSquares(nSquaresSEXP);
+    Rcpp::traits::input_parameter< double >::type trueDensity(trueDensitySEXP);
+    Rcpp::traits::input_parameter< int >::type nForages(nForagesSEXP);
+    rcpp_result_gen = Rcpp::wrap(GenTrapData(trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages));
+    return rcpp_result_gen;
+END_RCPP
+}
+// GenRingAssignmentMat
+NumericMatrix GenRingAssignmentMat(int nSquares);
+RcppExport SEXP _mousesim_GenRingAssignmentMat(SEXP nSquaresSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type nSquares(nSquaresSEXP);
+    rcpp_result_gen = Rcpp::wrap(GenRingAssignmentMat(nSquares));
+    return rcpp_result_gen;
+END_RCPP
+}
+// GenRingAssignmentVec
+NumericVector GenRingAssignmentVec(int nSquares);
+RcppExport SEXP _mousesim_GenRingAssignmentVec(SEXP nSquaresSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type nSquares(nSquaresSEXP);
+    rcpp_result_gen = Rcpp::wrap(GenRingAssignmentVec(nSquares));
+    return rcpp_result_gen;
+END_RCPP
+}
+// calcPeriodsByTrap
+NumericMatrix calcPeriodsByTrap(NumericMatrix catchData, int nForages);
+RcppExport SEXP _mousesim_calcPeriodsByTrap(SEXP catchDataSEXP, SEXP nForagesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type catchData(catchDataSEXP);
+    Rcpp::traits::input_parameter< int >::type nForages(nForagesSEXP);
+    rcpp_result_gen = Rcpp::wrap(calcPeriodsByTrap(catchData, nForages));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ProcessResults
+NumericMatrix ProcessResults(int uuid, int paramset, double trapSpacing, NumericMatrix collectData);
+RcppExport SEXP _mousesim_ProcessResults(SEXP uuidSEXP, SEXP paramsetSEXP, SEXP trapSpacingSEXP, SEXP collectDataSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type uuid(uuidSEXP);
+    Rcpp::traits::input_parameter< int >::type paramset(paramsetSEXP);
+    Rcpp::traits::input_parameter< double >::type trapSpacing(trapSpacingSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type collectData(collectDataSEXP);
+    rcpp_result_gen = Rcpp::wrap(ProcessResults(uuid, paramset, trapSpacing, collectData));
+    return rcpp_result_gen;
+END_RCPP
+}
+// checkParameters
+bool checkParameters(double trapSpacing, double catchRadius, double boarder, int nSquares, double trueDensity, int nForages);
+RcppExport SEXP _mousesim_checkParameters(SEXP trapSpacingSEXP, SEXP catchRadiusSEXP, SEXP boarderSEXP, SEXP nSquaresSEXP, SEXP trueDensitySEXP, SEXP nForagesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type trapSpacing(trapSpacingSEXP);
+    Rcpp::traits::input_parameter< double >::type catchRadius(catchRadiusSEXP);
+    Rcpp::traits::input_parameter< double >::type boarder(boarderSEXP);
+    Rcpp::traits::input_parameter< int >::type nSquares(nSquaresSEXP);
+    Rcpp::traits::input_parameter< double >::type trueDensity(trueDensitySEXP);
+    Rcpp::traits::input_parameter< int >::type nForages(nForagesSEXP);
+    rcpp_result_gen = Rcpp::wrap(checkParameters(trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages));
+    return rcpp_result_gen;
+END_RCPP
+}
+// RunSimulation
+NumericMatrix RunSimulation(int uuid, int paramset, double trapSpacing, double catchRadius, double boarder, int nSquares, double trueDensity, int nForages);
+RcppExport SEXP _mousesim_RunSimulation(SEXP uuidSEXP, SEXP paramsetSEXP, SEXP trapSpacingSEXP, SEXP catchRadiusSEXP, SEXP boarderSEXP, SEXP nSquaresSEXP, SEXP trueDensitySEXP, SEXP nForagesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type uuid(uuidSEXP);
+    Rcpp::traits::input_parameter< int >::type paramset(paramsetSEXP);
+    Rcpp::traits::input_parameter< double >::type trapSpacing(trapSpacingSEXP);
+    Rcpp::traits::input_parameter< double >::type catchRadius(catchRadiusSEXP);
+    Rcpp::traits::input_parameter< double >::type boarder(boarderSEXP);
+    Rcpp::traits::input_parameter< int >::type nSquares(nSquaresSEXP);
+    Rcpp::traits::input_parameter< double >::type trueDensity(trueDensitySEXP);
+    Rcpp::traits::input_parameter< int >::type nForages(nForagesSEXP);
+    rcpp_result_gen = Rcpp::wrap(RunSimulation(uuid, paramset, trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages));
+    return rcpp_result_gen;
+END_RCPP
+}
+// isCaught2
+NumericVector isCaught2(NumericMatrix forages, NumericMatrix Traps, double catchRadius);
+RcppExport SEXP _mousesim_isCaught2(SEXP foragesSEXP, SEXP TrapsSEXP, SEXP catchRadiusSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type forages(foragesSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Traps(TrapsSEXP);
+    Rcpp::traits::input_parameter< double >::type catchRadius(catchRadiusSEXP);
+    rcpp_result_gen = Rcpp::wrap(isCaught2(forages, Traps, catchRadius));
+    return rcpp_result_gen;
+END_RCPP
+}
+// GenAllMice
+NumericMatrix GenAllMice(double trapSpacing, double catchRadius, double boarder, int nSquares, double trueDensity, int nForages);
+RcppExport SEXP _mousesim_GenAllMice(SEXP trapSpacingSEXP, SEXP catchRadiusSEXP, SEXP boarderSEXP, SEXP nSquaresSEXP, SEXP trueDensitySEXP, SEXP nForagesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type trapSpacing(trapSpacingSEXP);
+    Rcpp::traits::input_parameter< double >::type catchRadius(catchRadiusSEXP);
+    Rcpp::traits::input_parameter< double >::type boarder(boarderSEXP);
+    Rcpp::traits::input_parameter< int >::type nSquares(nSquaresSEXP);
+    Rcpp::traits::input_parameter< double >::type trueDensity(trueDensitySEXP);
+    Rcpp::traits::input_parameter< int >::type nForages(nForagesSEXP);
+    rcpp_result_gen = Rcpp::wrap(GenAllMice(trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages));
+    return rcpp_result_gen;
+END_RCPP
+}
+// MiceDataToTrapData
+NumericMatrix MiceDataToTrapData(NumericMatrix MiceData, int nSquares, int nForages);
+RcppExport SEXP _mousesim_MiceDataToTrapData(SEXP MiceDataSEXP, SEXP nSquaresSEXP, SEXP nForagesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type MiceData(MiceDataSEXP);
+    Rcpp::traits::input_parameter< int >::type nSquares(nSquaresSEXP);
+    Rcpp::traits::input_parameter< int >::type nForages(nForagesSEXP);
+    rcpp_result_gen = Rcpp::wrap(MiceDataToTrapData(MiceData, nSquares, nForages));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_mousesim_rcpp_hello_world", (DL_FUNC) &_mousesim_rcpp_hello_world, 0},
+    {"_mousesim_isCaught", (DL_FUNC) &_mousesim_isCaught, 3},
+    {"_mousesim_GenMouse", (DL_FUNC) &_mousesim_GenMouse, 2},
+    {"_mousesim_GenTraps", (DL_FUNC) &_mousesim_GenTraps, 2},
+    {"_mousesim_GenTrapData", (DL_FUNC) &_mousesim_GenTrapData, 6},
+    {"_mousesim_GenRingAssignmentMat", (DL_FUNC) &_mousesim_GenRingAssignmentMat, 1},
+    {"_mousesim_GenRingAssignmentVec", (DL_FUNC) &_mousesim_GenRingAssignmentVec, 1},
+    {"_mousesim_calcPeriodsByTrap", (DL_FUNC) &_mousesim_calcPeriodsByTrap, 2},
+    {"_mousesim_ProcessResults", (DL_FUNC) &_mousesim_ProcessResults, 4},
+    {"_mousesim_checkParameters", (DL_FUNC) &_mousesim_checkParameters, 6},
+    {"_mousesim_RunSimulation", (DL_FUNC) &_mousesim_RunSimulation, 8},
+    {"_mousesim_isCaught2", (DL_FUNC) &_mousesim_isCaught2, 3},
+    {"_mousesim_GenAllMice", (DL_FUNC) &_mousesim_GenAllMice, 6},
+    {"_mousesim_MiceDataToTrapData", (DL_FUNC) &_mousesim_MiceDataToTrapData, 3},
     {NULL, NULL, 0}
 };
 
