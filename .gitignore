@@ -5,3 +5,6 @@
 .DS_Store
 data/*
 .ipynb_checkpoints/*
+*.o
+*.so
+*.tar.gz

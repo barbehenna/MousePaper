@@ -9,8 +9,7 @@
 
 library(shiny)
 library(raster)
-library(Rcpp)
-sourceCpp('Backend.cpp')
+library(mousesim)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -25,7 +24,7 @@ ui <- fluidPage(
          sliderInput("ts", "Trap Spacing", min = 0.5, max = 5, value = 1.5),
          sliderInput("delta", "Catch Radius", min = 0.25, max = 2.5, value = 0.5),
          sliderInput("density", "Population Density", min = 0.5, max = 5, value = 1),
-         sliderInput("boarder", "Boarder", min = 1, max = 10, value = 3)
+         sliderInput("border", "Border", min = 1, max = 10, value = 3)
       ),
       
       # Show a plot of the generated distribution
@@ -46,10 +45,10 @@ server <- function(input, output) {
      reps <- as.integer(input$iterations)
      # initial matrix n = 1, then sum the others 
      # GenTrapData returns a trap x day counts 
-     trapRes <- GenTrapData(trapSpacing = input$ts, catchRadius = input$delta, boarder = input$boarder, nSquares = NUM_SQUARES, trueDensity = input$density, nForages = 4)
+     trapRes <- GenTrapData(trapSpacing = input$ts, catchRadius = input$delta, border = input$border, nSquares = NUM_SQUARES, trueDensity = input$density, nForages = 4)
      if (reps > 1) {
         for (i in 2:reps) {
-           trapRes <- trapRes + GenTrapData(trapSpacing = input$ts, catchRadius = input$delta, boarder = input$boarder, nSquares = NUM_SQUARES, trueDensity = input$density, nForages = 4)
+           trapRes <- trapRes + GenTrapData(trapSpacing = input$ts, catchRadius = input$delta, border = input$border, nSquares = NUM_SQUARES, trueDensity = input$density, nForages = 4)
         }
      }
      # Collect results and plot
