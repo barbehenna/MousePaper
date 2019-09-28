@@ -10,7 +10,7 @@
 library(shiny)
 library(raster)
 library(Rcpp)
-sourceCpp(paste0(getwd(),'/SimulationBackend.cpp'))
+sourceCpp('Backend.cpp')
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -38,19 +38,23 @@ ui <- fluidPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+   NUM_SQUARES <- 8
   
    output$distPlot <- renderPlot({
      fs = (input$ts*7)+(2*input$boarder)
      np = input$density * fs * fs
      reps <- as.integer(input$iterations)
-     trapRes <- lapply(seq(reps), function(x) trapSim1(ts=input$ts, fs=fs, np=np, delta=input$delta, nv=4))
-     trapRes <- do.call(rbind, trapRes)
-     # trapRes <- trapSim1(ts=input$ts, fs=fs, np=np, delta=input$delta, nv=4)
-     trapRes <- data.frame(trap=trapRes[,1]+1, day=trapRes[,2]+1)
-     trapRes <- na.omit(trapRes)
-     trapCount <- unlist(lapply(seq(64), function(x) {sum(trapRes$trap == x)}))
-     trap_mat <- matrix(trapCount, nrow = 8, ncol = 8)
-     trap_rast <- raster(xmn = 0, xmx = 8, ymn = 0, ymx = 8, nrows = 8, ncols = 8)
+     # initial matrix n = 1, then sum the others 
+     # GenTrapData returns a trap x day counts 
+     trapRes <- GenTrapData(trapSpacing = input$ts, catchRadius = input$delta, boarder = input$boarder, nSquares = NUM_SQUARES, trueDensity = input$density, nForages = 4)
+     if (reps > 1) {
+        for (i in 2:reps) {
+           trapRes <- trapRes + GenTrapData(trapSpacing = input$ts, catchRadius = input$delta, boarder = input$boarder, nSquares = NUM_SQUARES, trueDensity = input$density, nForages = 4)
+        }
+     }
+     # Collect results and plot
+     trap_mat <- matrix(rowSums(trapRes) / sum(trapRes), nrow = 2*NUM_SQUARES, ncol = 2*NUM_SQUARES)
+     trap_rast <- raster(xmn = 0, xmx = 2*NUM_SQUARES, ymn = 0, ymx = 2*NUM_SQUARES, nrows = 2*NUM_SQUARES, ncols = 2*NUM_SQUARES)
      trap_rast[] <- trap_mat
      plot(trap_rast)
    })
