@@ -21,3 +21,6 @@ matrix containing our desired statistics
 \description{
 Takes in raw results and computes the desired statistics.
 }
+\details{
+The columns of the output are as follows [1-9]: uuid, paramset, square, pd1, pd2, pHat, nHat, aHat, dHat
+}

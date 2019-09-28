@@ -9,8 +9,7 @@
 
 library(shiny)
 library(raster)
-library(Rcpp)
-sourceCpp('Backend.cpp')
+library(mousesim)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(

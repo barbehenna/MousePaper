@@ -58,6 +58,7 @@ GenTraps <- function(nSquares = 8L, trapSpacing = 1.0) {
 #' @param trueDensity (double >= 0) true denstity of mice
 #' @param nForages (int >= 1) number of days to simulate
 #' @return matrix of number of mice caught in each trap and each day
+#' @export
 GenTrapData <- function(trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages) {
     .Call('_mousesim_GenTrapData', PACKAGE = 'mousesim', trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages)
 }
@@ -101,7 +102,7 @@ calcPeriodsByTrap <- function(catchData, nForages) {
 #' 
 #' Takes in raw results and computes the desired statistics.
 #' 
-#' @value The columns of the output are as follows [1-9]: uuid, paramset, square, pd1, pd2, pHat, nHat, aHat, dHat
+#' The columns of the output are as follows [1-9]: uuid, paramset, square, pd1, pd2, pHat, nHat, aHat, dHat
 #' 
 #' @param uuid (int) identifier for tracking resluts 
 #' @param paramset (int) index of parameters used (useful for multiple simulations at with the same parameters)
@@ -124,6 +125,7 @@ ProcessResults <- function(uuid, paramset, trapSpacing, collectData) {
 #' @param trueDensity (double >= 0) true denstity of mice
 #' @param nForages (int >= 1) number of days to simulate
 #' @return bool (true iff all parameters are valid)
+#' @export
 checkParameters <- function(trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages) {
     .Call('_mousesim_checkParameters', PACKAGE = 'mousesim', trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages)
 }
@@ -142,6 +144,7 @@ checkParameters <- function(trapSpacing, catchRadius, boarder, nSquares, trueDen
 #' @param nSquares (int >= 1) num concentric rings of traps
 #' @param trueDensity (double >= 0) true denstity of mice
 #' @param nForages (int >= 1) number of days to simulate
+#' @export
 #' @return matrix containing the results of the simulation 
 RunSimulation <- function(uuid, paramset, trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages) {
     .Call('_mousesim_RunSimulation', PACKAGE = 'mousesim', uuid, paramset, trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages)

@@ -134,6 +134,7 @@ NumericMatrix GenTraps(int nSquares = 8, double trapSpacing = 1.0) {
 //' @param trueDensity (double >= 0) true denstity of mice
 //' @param nForages (int >= 1) number of days to simulate
 //' @return matrix of number of mice caught in each trap and each day
+//' @export
 // [[Rcpp::export]]
 NumericMatrix GenTrapData(double trapSpacing, double catchRadius, double boarder, int nSquares, double trueDensity, int nForages) {
   double fieldSize = (((2 * nSquares) - 1) * trapSpacing) + (2 * boarder);
@@ -252,7 +253,7 @@ NumericMatrix calcPeriodsByTrap(NumericMatrix catchData, int nForages) {
 //' 
 //' Takes in raw results and computes the desired statistics.
 //' 
-//' @value The columns of the output are as follows [1-9]: uuid, paramset, square, pd1, pd2, pHat, nHat, aHat, dHat
+//' The columns of the output are as follows [1-9]: uuid, paramset, square, pd1, pd2, pHat, nHat, aHat, dHat
 //' 
 //' @param uuid (int) identifier for tracking resluts 
 //' @param paramset (int) index of parameters used (useful for multiple simulations at with the same parameters)
@@ -341,6 +342,7 @@ NumericMatrix ProcessResults(int uuid, int paramset, double trapSpacing, Numeric
 //' @param trueDensity (double >= 0) true denstity of mice
 //' @param nForages (int >= 1) number of days to simulate
 //' @return bool (true iff all parameters are valid)
+//' @export
 // [[Rcpp::export]]
 bool checkParameters(double trapSpacing, double catchRadius, double boarder, int nSquares, double trueDensity, int nForages) {
   if (trapSpacing <= 0) {
@@ -396,6 +398,7 @@ bool checkParameters(double trapSpacing, double catchRadius, double boarder, int
 //' @param nSquares (int >= 1) num concentric rings of traps
 //' @param trueDensity (double >= 0) true denstity of mice
 //' @param nForages (int >= 1) number of days to simulate
+//' @export
 //' @return matrix containing the results of the simulation 
 //[[Rcpp::export]]
 NumericMatrix RunSimulation(int uuid, int paramset, double trapSpacing, double catchRadius, double boarder, int nSquares, double trueDensity, int nForages) {
