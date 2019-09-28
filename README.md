@@ -13,3 +13,8 @@ R CMD INSTALL mousesim_1.0.tar.gz
 
 After that, you can load the package like any other: `library(mousesim)`.
 
+
+## Notes
+
+- There was a long standing typo of the border parameter. This has been fixed in the package and current C++ backend, however it may still break older code. 
+
