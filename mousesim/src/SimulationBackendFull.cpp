@@ -252,7 +252,7 @@ NumericMatrix calcPeriodsByTrap(NumericMatrix catchData, int nForages) {
 //' 
 //' Takes in raw results and computes the desired statistics.
 //' 
-//' @vaule The columns of the output are as follows [1-9]: uuid, paramset, square, pd1, pd2, pHat, nHat, aHat, dHat
+//' @value The columns of the output are as follows [1-9]: uuid, paramset, square, pd1, pd2, pHat, nHat, aHat, dHat
 //' 
 //' @param uuid (int) identifier for tracking resluts 
 //' @param paramset (int) index of parameters used (useful for multiple simulations at with the same parameters)
