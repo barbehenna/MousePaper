@@ -15,6 +15,6 @@ calcPeriodsByTrap(catchData, nForages)
 matrix reduced trapping data
 }
 \description{
-Sums the catchs at each trap into the sum of catches in the first half and the sum in the second half
+Sums the catches at each trap into the sum of catches in the first half and the sum in the second half
 Sufficiently messy and maybe something we want to change up in the future.
 }

@@ -15,7 +15,7 @@ GenMouse(nForages, fieldSize)
 matrix of locations (x,y) pairs
 }
 \description{
-Generates a single mouse in a field of spcified size and returns all of the
-locations the mouse forages (number of forages given by nforages).
+Generates a single mouse in a field of specified size and returns all of the
+locations the mouse forages (number of forages given by nForages).
 In the returned matrix, each row is a forage coordinate (x,y).
 }

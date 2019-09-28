@@ -5,8 +5,8 @@
 \title{Assign rings as a vector
  
 For a given number of square, return a NumericVector containing which square each trap is in 
-Vector Output. Don't need to worry too much about the order of indexing becasue the ring lables 
-are invarient to flips and rotations.}
+Vector Output. Don't need to worry too much about the order of indexing because the ring labels 
+are invariant to flips and rotations.}
 \usage{
 GenRingAssignmentVec(nSquares)
 }
@@ -20,6 +20,6 @@ vector of ring assignments
 Assign rings as a vector
  
 For a given number of square, return a NumericVector containing which square each trap is in 
-Vector Output. Don't need to worry too much about the order of indexing becasue the ring lables 
-are invarient to flips and rotations.
+Vector Output. Don't need to worry too much about the order of indexing because the ring labels 
+are invariant to flips and rotations.
 }

@@ -23,8 +23,8 @@ using namespace Rcpp;
 //' determine which (if any) trap caught the mouse. Return -1 if the mouse is
 //' not caught and the traps index of the trap that caught the mouse if it was
 //' caught.
-//' The general algorithm (as implemented currently) does not implment recapture
-//' of the mouse, but could be extended to do so by returning an array of indicies
+//' The general algorithm (as implemented currently) does not implement recapture
+//' of the mouse, but could be extended to do so by returning an array of indices
 //' (one per forage) of the traps the mouse was caught in.
 //'
 //' @param forages 2xn matrix of forage coordinates (x,y)
@@ -70,8 +70,8 @@ NumericVector isCaught(NumericMatrix forages, NumericMatrix Traps, double catchR
 
 //' Determine if/where a mouse is caught
 //' 
-//' Generates a single mouse in a field of spcified size and returns all of the
-//' locations the mouse forages (number of forages given by nforages).
+//' Generates a single mouse in a field of specified size and returns all of the
+//' locations the mouse forages (number of forages given by nForages).
 //' In the returned matrix, each row is a forage coordinate (x,y).
 //' 
 //' @param nForages (int) number of days to simulate
@@ -124,20 +124,20 @@ NumericMatrix GenTraps(int nSquares = 8, double trapSpacing = 1.0) {
 //' 
 //' For a given set of simulation parameters, calculate the remaining parameters and then 
 //' simulate the raw trap data. The return of this function is a NumericMatrix where each
-//' row is a single trap and each day is a single day (ordered as ususal). The value of each
+//' row is a single trap and each day is a single day (ordered as usual). The value of each
 //' entry is the number of mice caught in that trap on that day. 
 //' 
 //' @param trapSpacing (double >= 0) distance between traps
 //' @param catchRadius (double >= 0) taxicab metric distance catch threshold
-//' @param boarder (double >= 0) buffer outside trap grid
+//' @param border (double >= 0) buffer outside trap grid
 //' @param nSquares (int >= 1) num concentric rings of traps
-//' @param trueDensity (double >= 0) true denstity of mice
+//' @param trueDensity (double >= 0) true density of mice
 //' @param nForages (int >= 1) number of days to simulate
 //' @return matrix of number of mice caught in each trap and each day
 //' @export
 // [[Rcpp::export]]
-NumericMatrix GenTrapData(double trapSpacing, double catchRadius, double boarder, int nSquares, double trueDensity, int nForages) {
-  double fieldSize = (((2 * nSquares) - 1) * trapSpacing) + (2 * boarder);
+NumericMatrix GenTrapData(double trapSpacing, double catchRadius, double border, int nSquares, double trueDensity, int nForages) {
+  double fieldSize = (((2 * nSquares) - 1) * trapSpacing) + (2 * border);
   int nmice = std::round(fieldSize * fieldSize * trueDensity);
   
   // std::cout << "fs = " << fieldSize << " nmice = " << nmice << std::endl; // check correct simulation values
@@ -146,7 +146,7 @@ NumericMatrix GenTrapData(double trapSpacing, double catchRadius, double boarder
   NumericMatrix Traps = GenTraps(nSquares, trapSpacing);
   
   // Data collection data-structure
-  // One row per trap and one column for catch opprotunity
+  // One row per trap and one column for catch opportunity
   NumericMatrix trapCountByDay(Traps.nrow(), nForages); // initialized to 0
 
   // for each of the nmice
@@ -183,8 +183,8 @@ NumericMatrix GenRingAssignmentMat(int nSquares) {
   
   for (int i = 0; i < rings.nrow(); i++) {
     for (int j = 0; j < rings.ncol(); j++) {
-      //rings(i,j) = nSquares - std::min(i, j); // just top left quadrent
-      //rings(i,j) = std::max(i, j) - nSquares + 1; // just bottom right quadrent
+      //rings(i,j) = nSquares - std::min(i, j); // just top left quadrant
+      //rings(i,j) = std::max(i, j) - nSquares + 1; // just bottom right quadrant
       rings(i,j) = std::max(nSquares - std::min(i, j), std::max(i, j) - nSquares + 1);  // All traps
     }
   }
@@ -196,8 +196,8 @@ NumericMatrix GenRingAssignmentMat(int nSquares) {
 //' Assign rings as a vector
 //'  
 //' For a given number of square, return a NumericVector containing which square each trap is in 
-//' Vector Output. Don't need to worry too much about the order of indexing becasue the ring lables 
-//' are invarient to flips and rotations.
+//' Vector Output. Don't need to worry too much about the order of indexing because the ring labels 
+//' are invariant to flips and rotations.
 //' 
 //' @param nSquares (int >= 0) number of concentric rings
 //' @return vector of ring assignments
@@ -207,8 +207,8 @@ NumericVector GenRingAssignmentVec(int nSquares) {
   
   for (int i = 0; i < 2*nSquares; i++) { //2*nSquares = sqrt(length(rings))
     for (int j = 0; j < 2*nSquares; j++) {
-      //rings(i,j) = nSquares - std::min(i, j); // just top left quadrent
-      //rings(i,j) = std::max(i, j) - nSquares + 1; // just bottom right quadrent
+      //rings(i,j) = nSquares - std::min(i, j); // just top left quadrant
+      //rings(i,j) = std::max(i, j) - nSquares + 1; // just bottom right quadrant
       //rings(i,j) = std::max(nSquares - std::min(i, j), std::max(i, j) - nSquares + 1);  // All traps (matrix form)
       rings((2*nSquares*i) + j) = std::max(nSquares - std::min(i, j), std::max(i, j) - nSquares + 1);
     }
@@ -220,7 +220,7 @@ NumericVector GenRingAssignmentVec(int nSquares) {
 
 //' Group the observations into two halves
 //' 
-//' Sums the catchs at each trap into the sum of catches in the first half and the sum in the second half
+//' Sums the catches at each trap into the sum of catches in the first half and the sum in the second half
 //' Sufficiently messy and maybe something we want to change up in the future.
 //' 
 //' @param catchData raw catch data (like from GenTrapData)
@@ -255,7 +255,7 @@ NumericMatrix calcPeriodsByTrap(NumericMatrix catchData, int nForages) {
 //' 
 //' The columns of the output are as follows [1-9]: uuid, paramset, square, pd1, pd2, pHat, nHat, aHat, dHat
 //' 
-//' @param uuid (int) identifier for tracking resluts 
+//' @param uuid (int) identifier for tracking results 
 //' @param paramset (int) index of parameters used (useful for multiple simulations at with the same parameters)
 //' @param trapSpacing (double >= 0) distance in sd units between traps
 //' @param collectData matrix raw catch data from simulation
@@ -332,19 +332,19 @@ NumericMatrix ProcessResults(int uuid, int paramset, double trapSpacing, Numeric
 
 //' Validate input parameters
 //'  
-//' Check that the parameters input are valid and meaningful for the expirament
+//' Check that the parameters input are valid and meaningful for the experiment
 //' type errors will be handled at runtime and cause an error
 //' 
 //' @param trapSpacing (double >= 0) distance between traps
 //' @param catchRadius (double >= 0) taxicab metric distance catch threshold
-//' @param boarder (double >= 0) buffer outside trap grid
+//' @param border (double >= 0) buffer outside trap grid
 //' @param nSquares (int >= 1) num concentric rings of traps
-//' @param trueDensity (double >= 0) true denstity of mice
+//' @param trueDensity (double >= 0) true density of mice
 //' @param nForages (int >= 1) number of days to simulate
 //' @return bool (true iff all parameters are valid)
 //' @export
 // [[Rcpp::export]]
-bool checkParameters(double trapSpacing, double catchRadius, double boarder, int nSquares, double trueDensity, int nForages) {
+bool checkParameters(double trapSpacing, double catchRadius, double border, int nSquares, double trueDensity, int nForages) {
   if (trapSpacing <= 0) {
     // std::cout << "Invalid trapSpacing " << trapSpacing << " (<0)." << std::endl;
     return false;
@@ -355,8 +355,8 @@ bool checkParameters(double trapSpacing, double catchRadius, double boarder, int
     return false;
   }
   
-  if (boarder <= 0) {
-    // std::cout << "Invalid boarder " << boarder << " (<0)." << std::endl;
+  if (border <= 0) {
+    // std::cout << "Invalid border " << border << " (<0)." << std::endl;
     return false;
   }
   
@@ -386,25 +386,25 @@ bool checkParameters(double trapSpacing, double catchRadius, double boarder, int
 
 //' Function to run simulation
 //' 
-//' Separated from the computaion to allow R to do both parts independently 
+//' Separated from the computation to allow R to do both parts independently 
 //' (to save or examine raw catch data). Check out the functions checkParameters 
 //' and ProcessResults.
 //' 
-//' @param uuid (int) identifier for tracking resluts 
+//' @param uuid (int) identifier for tracking results 
 //' @param paramset (int) index of parameters used (useful for multiple simulations at with the same parameters)
 //' @param trapSpacing (double >= 0) distance between traps
 //' @param catchRadius (double >= 0) taxicab metric distance catch threshold
-//' @param boarder (double >= 0) buffer outside trap grid
+//' @param border (double >= 0) buffer outside trap grid
 //' @param nSquares (int >= 1) num concentric rings of traps
-//' @param trueDensity (double >= 0) true denstity of mice
+//' @param trueDensity (double >= 0) true density of mice
 //' @param nForages (int >= 1) number of days to simulate
 //' @export
 //' @return matrix containing the results of the simulation 
 //[[Rcpp::export]]
-NumericMatrix RunSimulation(int uuid, int paramset, double trapSpacing, double catchRadius, double boarder, int nSquares, double trueDensity, int nForages) {
+NumericMatrix RunSimulation(int uuid, int paramset, double trapSpacing, double catchRadius, double border, int nSquares, double trueDensity, int nForages) {
   // check if the inputs will cause an obvious error
-  if (checkParameters(trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages)) {
-    NumericMatrix collectData = GenTrapData(trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages);
+  if (checkParameters(trapSpacing, catchRadius, border, nSquares, trueDensity, nForages)) {
+    NumericMatrix collectData = GenTrapData(trapSpacing, catchRadius, border, nSquares, trueDensity, nForages);
     NumericMatrix stats = ProcessResults(uuid, paramset, trapSpacing, collectData);
     
     return stats;
@@ -420,7 +420,7 @@ NumericMatrix RunSimulation(int uuid, int paramset, double trapSpacing, double c
 //' determine which (if any) trap caught the mouse for a given forage. Return -1 
 //' if the mouse is not caught and the traps index of the trap that caught the 
 //' mouse if it was caught.
-//' The general algorithm (as implemented currently) does not implment recapture
+//' The general algorithm (as implemented currently) does not implement recapture
 //' of the mouse, but could be extended to do so by returning an array of indicies
 //' (one per forage) of the traps the mouse was caught in.
 //' 
@@ -475,17 +475,17 @@ NumericVector isCaught2(NumericMatrix forages, NumericMatrix Traps, double catch
 //' 
 //' @param trapSpacing (double >= 0) distance between traps
 //' @param catchRadius (double >= 0) taxicab metric distance catch threshold
-//' @param boarder (double >= 0) buffer outside trap grid
+//' @param border (double >= 0) buffer outside trap grid
 //' @param nSquares (int >= 1) num concentric rings of traps
-//' @param trueDensity (double >= 0) true denstity of mice
+//' @param trueDensity (double >= 0) true density of mice
 //' @param nForages (int >= 1) number of days to simulate
 //' @return matrix of which trap every mouse was caught in every day
 // [[Rcpp::export]]
-NumericMatrix GenAllMice(double trapSpacing, double catchRadius, double boarder, int nSquares, double trueDensity, int nForages) {
-  double fieldSize = (((2 * nSquares) - 1) * trapSpacing) + (2 * boarder);
+NumericMatrix GenAllMice(double trapSpacing, double catchRadius, double border, int nSquares, double trueDensity, int nForages) {
+  double fieldSize = (((2 * nSquares) - 1) * trapSpacing) + (2 * border);
   int nmice = std::round(fieldSize * fieldSize * trueDensity);
   
-  // Initialize all mice martix
+  // Initialize all mice matrix
   // one row per mouse
   // columns are traps mouse is caught in
   NumericMatrix Mice(nmice, nForages);
@@ -521,7 +521,7 @@ NumericMatrix MiceDataToTrapData(NumericMatrix MiceData, int nSquares, int nFora
   int nTraps = 4 * nSquares * nSquares; // (2*nSquares)^2
 
   // Data collection data-structure
-  // One row per trap and one column for catch opprotunity
+  // One row per trap and one column for catch opportunity
   NumericMatrix trapCountByDay(nTraps, nForages); // initialized to 0
   
   // Convert to by trap and day counts

@@ -4,11 +4,11 @@
 \alias{RunSimulation}
 \title{Function to run simulation}
 \usage{
-RunSimulation(uuid, paramset, trapSpacing, catchRadius, boarder, nSquares,
+RunSimulation(uuid, paramset, trapSpacing, catchRadius, border, nSquares,
   trueDensity, nForages)
 }
 \arguments{
-\item{uuid}{(int) identifier for tracking resluts}
+\item{uuid}{(int) identifier for tracking results}
 
 \item{paramset}{(int) index of parameters used (useful for multiple simulations at with the same parameters)}
 
@@ -16,11 +16,11 @@ RunSimulation(uuid, paramset, trapSpacing, catchRadius, boarder, nSquares,
 
 \item{catchRadius}{(double >= 0) taxicab metric distance catch threshold}
 
-\item{boarder}{(double >= 0) buffer outside trap grid}
+\item{border}{(double >= 0) buffer outside trap grid}
 
 \item{nSquares}{(int >= 1) num concentric rings of traps}
 
-\item{trueDensity}{(double >= 0) true denstity of mice}
+\item{trueDensity}{(double >= 0) true density of mice}
 
 \item{nForages}{(int >= 1) number of days to simulate}
 }
@@ -28,7 +28,7 @@ RunSimulation(uuid, paramset, trapSpacing, catchRadius, boarder, nSquares,
 matrix containing the results of the simulation
 }
 \description{
-Separated from the computaion to allow R to do both parts independently 
+Separated from the computation to allow R to do both parts independently 
 (to save or examine raw catch data). Check out the functions checkParameters 
 and ProcessResults.
 }

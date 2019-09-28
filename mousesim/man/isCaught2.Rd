@@ -21,7 +21,7 @@ For a given single mouse's forage coordinates, go through all traps and
 determine which (if any) trap caught the mouse for a given forage. Return -1 
 if the mouse is not caught and the traps index of the trap that caught the 
 mouse if it was caught.
-The general algorithm (as implemented currently) does not implment recapture
+The general algorithm (as implemented currently) does not implement recapture
 of the mouse, but could be extended to do so by returning an array of indicies
 (one per forage) of the traps the mouse was caught in.
 }

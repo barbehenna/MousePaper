@@ -7,7 +7,7 @@
 ProcessResults(uuid, paramset, trapSpacing, collectData)
 }
 \arguments{
-\item{uuid}{(int) identifier for tracking resluts}
+\item{uuid}{(int) identifier for tracking results}
 
 \item{paramset}{(int) index of parameters used (useful for multiple simulations at with the same parameters)}
 

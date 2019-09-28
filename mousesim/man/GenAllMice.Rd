@@ -4,7 +4,7 @@
 \alias{GenAllMice}
 \title{Generate mice and find where they're trapped}
 \usage{
-GenAllMice(trapSpacing, catchRadius, boarder, nSquares, trueDensity,
+GenAllMice(trapSpacing, catchRadius, border, nSquares, trueDensity,
   nForages)
 }
 \arguments{
@@ -12,11 +12,11 @@ GenAllMice(trapSpacing, catchRadius, boarder, nSquares, trueDensity,
 
 \item{catchRadius}{(double >= 0) taxicab metric distance catch threshold}
 
-\item{boarder}{(double >= 0) buffer outside trap grid}
+\item{border}{(double >= 0) buffer outside trap grid}
 
 \item{nSquares}{(int >= 1) num concentric rings of traps}
 
-\item{trueDensity}{(double >= 0) true denstity of mice}
+\item{trueDensity}{(double >= 0) true density of mice}
 
 \item{nForages}{(int >= 1) number of days to simulate}
 }

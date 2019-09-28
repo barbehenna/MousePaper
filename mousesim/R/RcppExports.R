@@ -7,8 +7,8 @@
 #' determine which (if any) trap caught the mouse. Return -1 if the mouse is
 #' not caught and the traps index of the trap that caught the mouse if it was
 #' caught.
-#' The general algorithm (as implemented currently) does not implment recapture
-#' of the mouse, but could be extended to do so by returning an array of indicies
+#' The general algorithm (as implemented currently) does not implement recapture
+#' of the mouse, but could be extended to do so by returning an array of indices
 #' (one per forage) of the traps the mouse was caught in.
 #'
 #' @param forages 2xn matrix of forage coordinates (x,y)
@@ -16,20 +16,20 @@
 #' @param catchRadius >= 0 Taxicab metric
 #' @return length 2 vector, the first number is the trap index and the second number is the day it was caught
 isCaught <- function(forages, Traps, catchRadius) {
-    .Call('_mousesim_isCaught', PACKAGE = 'mousesim', forages, Traps, catchRadius)
+    .Call(`_mousesim_isCaught`, forages, Traps, catchRadius)
 }
 
 #' Determine if/where a mouse is caught
 #' 
-#' Generates a single mouse in a field of spcified size and returns all of the
-#' locations the mouse forages (number of forages given by nforages).
+#' Generates a single mouse in a field of specified size and returns all of the
+#' locations the mouse forages (number of forages given by nForages).
 #' In the returned matrix, each row is a forage coordinate (x,y).
 #' 
 #' @param nForages (int) number of days to simulate
 #' @param fieldSize (double) side length of full field
 #' @return matrix of locations (x,y) pairs
 GenMouse <- function(nForages, fieldSize) {
-    .Call('_mousesim_GenMouse', PACKAGE = 'mousesim', nForages, fieldSize)
+    .Call(`_mousesim_GenMouse`, nForages, fieldSize)
 }
 
 #' Generate trap coordinates
@@ -41,26 +41,26 @@ GenMouse <- function(nForages, fieldSize) {
 #' @param trapSpacing distance in sd units between traps
 #' @return matrix of (x,y) pairs
 GenTraps <- function(nSquares = 8L, trapSpacing = 1.0) {
-    .Call('_mousesim_GenTraps', PACKAGE = 'mousesim', nSquares, trapSpacing)
+    .Call(`_mousesim_GenTraps`, nSquares, trapSpacing)
 }
 
 #' Generate Raw Trapping Data
 #' 
 #' For a given set of simulation parameters, calculate the remaining parameters and then 
 #' simulate the raw trap data. The return of this function is a NumericMatrix where each
-#' row is a single trap and each day is a single day (ordered as ususal). The value of each
+#' row is a single trap and each day is a single day (ordered as usual). The value of each
 #' entry is the number of mice caught in that trap on that day. 
 #' 
 #' @param trapSpacing (double >= 0) distance between traps
 #' @param catchRadius (double >= 0) taxicab metric distance catch threshold
-#' @param boarder (double >= 0) buffer outside trap grid
+#' @param border (double >= 0) buffer outside trap grid
 #' @param nSquares (int >= 1) num concentric rings of traps
-#' @param trueDensity (double >= 0) true denstity of mice
+#' @param trueDensity (double >= 0) true density of mice
 #' @param nForages (int >= 1) number of days to simulate
 #' @return matrix of number of mice caught in each trap and each day
 #' @export
-GenTrapData <- function(trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages) {
-    .Call('_mousesim_GenTrapData', PACKAGE = 'mousesim', trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages)
+GenTrapData <- function(trapSpacing, catchRadius, border, nSquares, trueDensity, nForages) {
+    .Call(`_mousesim_GenTrapData`, trapSpacing, catchRadius, border, nSquares, trueDensity, nForages)
 }
 
 #' Assign rings from matrix
@@ -71,31 +71,31 @@ GenTrapData <- function(trapSpacing, catchRadius, boarder, nSquares, trueDensity
 #' @param nSquares (int >= 0) number of concentric rings
 #' @return matrix of ring assignments
 GenRingAssignmentMat <- function(nSquares) {
-    .Call('_mousesim_GenRingAssignmentMat', PACKAGE = 'mousesim', nSquares)
+    .Call(`_mousesim_GenRingAssignmentMat`, nSquares)
 }
 
 #' Assign rings as a vector
 #'  
 #' For a given number of square, return a NumericVector containing which square each trap is in 
-#' Vector Output. Don't need to worry too much about the order of indexing becasue the ring lables 
-#' are invarient to flips and rotations.
+#' Vector Output. Don't need to worry too much about the order of indexing because the ring labels 
+#' are invariant to flips and rotations.
 #' 
 #' @param nSquares (int >= 0) number of concentric rings
 #' @return vector of ring assignments
 GenRingAssignmentVec <- function(nSquares) {
-    .Call('_mousesim_GenRingAssignmentVec', PACKAGE = 'mousesim', nSquares)
+    .Call(`_mousesim_GenRingAssignmentVec`, nSquares)
 }
 
 #' Group the observations into two halves
 #' 
-#' Sums the catchs at each trap into the sum of catches in the first half and the sum in the second half
+#' Sums the catches at each trap into the sum of catches in the first half and the sum in the second half
 #' Sufficiently messy and maybe something we want to change up in the future.
 #' 
 #' @param catchData raw catch data (like from GenTrapData)
 #' @param nForages (int>=0) number of days simulated
 #' @return matrix reduced trapping data
 calcPeriodsByTrap <- function(catchData, nForages) {
-    .Call('_mousesim_calcPeriodsByTrap', PACKAGE = 'mousesim', catchData, nForages)
+    .Call(`_mousesim_calcPeriodsByTrap`, catchData, nForages)
 }
 
 #' Calculate statistics by square
@@ -104,50 +104,50 @@ calcPeriodsByTrap <- function(catchData, nForages) {
 #' 
 #' The columns of the output are as follows [1-9]: uuid, paramset, square, pd1, pd2, pHat, nHat, aHat, dHat
 #' 
-#' @param uuid (int) identifier for tracking resluts 
+#' @param uuid (int) identifier for tracking results 
 #' @param paramset (int) index of parameters used (useful for multiple simulations at with the same parameters)
 #' @param trapSpacing (double >= 0) distance in sd units between traps
 #' @param collectData matrix raw catch data from simulation
 #' @return matrix containing our desired statistics 
 ProcessResults <- function(uuid, paramset, trapSpacing, collectData) {
-    .Call('_mousesim_ProcessResults', PACKAGE = 'mousesim', uuid, paramset, trapSpacing, collectData)
+    .Call(`_mousesim_ProcessResults`, uuid, paramset, trapSpacing, collectData)
 }
 
 #' Validate input parameters
 #'  
-#' Check that the parameters input are valid and meaningful for the expirament
+#' Check that the parameters input are valid and meaningful for the experiment
 #' type errors will be handled at runtime and cause an error
 #' 
 #' @param trapSpacing (double >= 0) distance between traps
 #' @param catchRadius (double >= 0) taxicab metric distance catch threshold
-#' @param boarder (double >= 0) buffer outside trap grid
+#' @param border (double >= 0) buffer outside trap grid
 #' @param nSquares (int >= 1) num concentric rings of traps
-#' @param trueDensity (double >= 0) true denstity of mice
+#' @param trueDensity (double >= 0) true density of mice
 #' @param nForages (int >= 1) number of days to simulate
 #' @return bool (true iff all parameters are valid)
 #' @export
-checkParameters <- function(trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages) {
-    .Call('_mousesim_checkParameters', PACKAGE = 'mousesim', trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages)
+checkParameters <- function(trapSpacing, catchRadius, border, nSquares, trueDensity, nForages) {
+    .Call(`_mousesim_checkParameters`, trapSpacing, catchRadius, border, nSquares, trueDensity, nForages)
 }
 
 #' Function to run simulation
 #' 
-#' Separated from the computaion to allow R to do both parts independently 
+#' Separated from the computation to allow R to do both parts independently 
 #' (to save or examine raw catch data). Check out the functions checkParameters 
 #' and ProcessResults.
 #' 
-#' @param uuid (int) identifier for tracking resluts 
+#' @param uuid (int) identifier for tracking results 
 #' @param paramset (int) index of parameters used (useful for multiple simulations at with the same parameters)
 #' @param trapSpacing (double >= 0) distance between traps
 #' @param catchRadius (double >= 0) taxicab metric distance catch threshold
-#' @param boarder (double >= 0) buffer outside trap grid
+#' @param border (double >= 0) buffer outside trap grid
 #' @param nSquares (int >= 1) num concentric rings of traps
-#' @param trueDensity (double >= 0) true denstity of mice
+#' @param trueDensity (double >= 0) true density of mice
 #' @param nForages (int >= 1) number of days to simulate
 #' @export
 #' @return matrix containing the results of the simulation 
-RunSimulation <- function(uuid, paramset, trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages) {
-    .Call('_mousesim_RunSimulation', PACKAGE = 'mousesim', uuid, paramset, trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages)
+RunSimulation <- function(uuid, paramset, trapSpacing, catchRadius, border, nSquares, trueDensity, nForages) {
+    .Call(`_mousesim_RunSimulation`, uuid, paramset, trapSpacing, catchRadius, border, nSquares, trueDensity, nForages)
 }
 
 #' Alternate isCaught method
@@ -156,7 +156,7 @@ RunSimulation <- function(uuid, paramset, trapSpacing, catchRadius, boarder, nSq
 #' determine which (if any) trap caught the mouse for a given forage. Return -1 
 #' if the mouse is not caught and the traps index of the trap that caught the 
 #' mouse if it was caught.
-#' The general algorithm (as implemented currently) does not implment recapture
+#' The general algorithm (as implemented currently) does not implement recapture
 #' of the mouse, but could be extended to do so by returning an array of indicies
 #' (one per forage) of the traps the mouse was caught in.
 #' 
@@ -165,7 +165,7 @@ RunSimulation <- function(uuid, paramset, trapSpacing, catchRadius, boarder, nSq
 #' @param catchRadius (double >= 0) forage to trip distance to catch
 #' @return vector containing the trap that catches the mouse on each day (for recapture models)
 isCaught2 <- function(forages, Traps, catchRadius) {
-    .Call('_mousesim_isCaught2', PACKAGE = 'mousesim', forages, Traps, catchRadius)
+    .Call(`_mousesim_isCaught2`, forages, Traps, catchRadius)
 }
 
 #' Generate mice and find where they're trapped
@@ -176,13 +176,13 @@ isCaught2 <- function(forages, Traps, catchRadius) {
 #' 
 #' @param trapSpacing (double >= 0) distance between traps
 #' @param catchRadius (double >= 0) taxicab metric distance catch threshold
-#' @param boarder (double >= 0) buffer outside trap grid
+#' @param border (double >= 0) buffer outside trap grid
 #' @param nSquares (int >= 1) num concentric rings of traps
-#' @param trueDensity (double >= 0) true denstity of mice
+#' @param trueDensity (double >= 0) true density of mice
 #' @param nForages (int >= 1) number of days to simulate
 #' @return matrix of which trap every mouse was caught in every day
-GenAllMice <- function(trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages) {
-    .Call('_mousesim_GenAllMice', PACKAGE = 'mousesim', trapSpacing, catchRadius, boarder, nSquares, trueDensity, nForages)
+GenAllMice <- function(trapSpacing, catchRadius, border, nSquares, trueDensity, nForages) {
+    .Call(`_mousesim_GenAllMice`, trapSpacing, catchRadius, border, nSquares, trueDensity, nForages)
 }
 
 #' Transform mouse based data to trap based data
@@ -197,6 +197,6 @@ GenAllMice <- function(trapSpacing, catchRadius, boarder, nSquares, trueDensity,
 #' @param nForages (int >= 1) number of days/forages
 #' @return matrix containing the number of mice caught on in each trap on each day
 MiceDataToTrapData <- function(MiceData, nSquares, nForages) {
-    .Call('_mousesim_MiceDataToTrapData', PACKAGE = 'mousesim', MiceData, nSquares, nForages)
+    .Call(`_mousesim_MiceDataToTrapData`, MiceData, nSquares, nForages)
 }
 
