@@ -83,6 +83,9 @@ colSums(reps) / round(TRUE_DENSITY * ((2 * NSQUARES - 1) * TS + 2 * BORDER)^2)
 catches <- GenTrapData(trapSpacing = TS, catchRadius = CR, border = BORDER, nSquares = NSQUARES, trueDensity = TRUE_DENSITY, nForages = NUM_OBS)
 x <- colSums(catches)
 
+## Or generate some more pure data from model we're using
+x <- as.numeric(table(rgeom(1000, 0.5)))
+
 ## Calculate estimates over time
 n <- cumsum(x)
 sx <- cumsum(x * (1:length(x)))
@@ -91,7 +94,31 @@ sx <- cumsum(x * (1:length(x)))
 alphas <- n + 1
 betas <- sx - n + 1
 
+## Adjustment hack to correct to include the number of unobserved mice in the study
+pHats <- alphas / (alphas + betas)
+d <- 1:length(x)
+betas <- sx - n + d * n * (1 / (1 - (1 - pHats)^d) - 1) / pHats + 1
+# betas <- sx - n + d * n * (1 / (1 - (1 - pHats)^d) - 1) + 1
+
+
 ## Posterior statistics
 postMean <- alphas / (alphas + betas)
 postMode <- (alphas - 1) / (alphas + betas - 2)
 postVar <- alphas * betas / ((alphas + betas)^2 * (alphas + betas + 1))
+
+
+
+#### Alternative Methods to get pHat ####
+
+## OLS Regression
+ols.mod <- lm(-log(y) ~ x, df)
+summary(ols.mod)
+
+## Regression works quite well on the data from rgeom but it gets thrown off
+## by the trapping simulation data, partly because the tail behavior (mice
+## trickling in) is not geometric in distribution.
+
+
+## MLE
+## Basically the same as the Bayes estimator
+pHatMLE <- n / sx
