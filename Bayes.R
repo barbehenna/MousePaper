@@ -84,27 +84,46 @@ catches <- GenTrapData(trapSpacing = TS, catchRadius = CR, border = BORDER, nSqu
 x <- colSums(catches)
 
 ## Or generate some more pure data from model we're using
-x <- as.numeric(table(rgeom(1000, 0.5)))
+x <- as.numeric(table(rgeom(1000, 0.25)))
 
-## Calculate estimates over time
-n <- cumsum(x)
-sx <- cumsum(x * (1:length(x)))
+## New model (unoptimized code)
 
-## Parameters
-alphas <- n + 1
-betas <- sx - n + 1
+## Priors: Beta(1,1) =d Unif(0,1)
+## Can adjust if you want to shift prior mean of p
+## prior mean of p = a0/(a0+b0)
+a0 <- 1
+b0 <- 1
 
-## Adjustment hack to correct to include the number of unobserved mice in the study
-pHats <- alphas / (alphas + betas)
-d <- 1:length(x)
-betas <- sx - n + d * n * (1 / (1 - (1 - pHats)^d) - 1) / pHats + 1
-# betas <- sx - n + d * n * (1 / (1 - (1 - pHats)^d) - 1) + 1
+## Initialize pHat vectors (expectation and variance)
+pHatVar <- numeric(length(x))
+pHat <- numeric(length(x))
+
+## Start with prior expectation of p
+pHatOld <- a0 / (a0 + b0)
+
+## Iterativly approximate p, collecting expectation and variance
+for (i in seq(x)) {
+  ## Observations to date
+  no <- sum(x[1:i])
+  sxo <- sum(x[1:i] * (1:i))
+
+  ## Estimate full n and sx based on previous best estimate of p
+  n <- no * (1 + (1 - pHatOld)^i / (1 - (1 - pHatOld)^i))
+  sx <- sxo + (n - no) * (i + 1 / pHatOld)
+
+  ## Calculate posterior parameters
+  a <- n + a0
+  b <- sx - n + b0
+
+  ## Estimates and variance
+  pHat[i] <- a / (a + b)
+  pHatVar[i] <- a * b / (a + b)^2 / (a + b + 1)
+
+  ## Update pHatOld
+  pHatOld <- pHat[i]
+}
 
 
-## Posterior statistics
-postMean <- alphas / (alphas + betas)
-postMode <- (alphas - 1) / (alphas + betas - 2)
-postVar <- alphas * betas / ((alphas + betas)^2 * (alphas + betas + 1))
 
 
 
